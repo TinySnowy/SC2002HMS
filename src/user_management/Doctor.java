@@ -3,8 +3,8 @@ package user_management;
 public class Doctor extends User {
     private String specialty;
 
-    public Doctor(String id, String password, String specialty) {
-        super(id, password, "Doctor");
+    public Doctor(String id, String password, String specialty, String name) {
+        super(id, password, "Doctor", name);
         this.specialty = specialty;
     }
 
@@ -15,6 +15,5 @@ public class Doctor extends User {
     @Override
     public void displayMenu() {
         System.out.println("Doctor Menu");
-        // Doctor-specific options can go here
     }
 }

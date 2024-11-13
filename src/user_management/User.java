@@ -2,14 +2,16 @@ package user_management;
 
 public abstract class User {
     protected String id;
+    protected String name;  // Add name field here
     protected String password;
     protected String role;
     protected boolean isFirstLogin;
 
-    public User(String id, String password, String role) {
+    public User(String id, String password, String role, String name) {
         this.id = id;
         this.password = password;
         this.role = role;
+        this.name = name;
         this.isFirstLogin = true;
     }
 
@@ -25,6 +27,10 @@ public abstract class User {
         return role;
     }
 
+    public String getName() {
+        return name;  // Getter for name
+    }
+
     public boolean isFirstLogin() {
         return isFirstLogin;
     }
@@ -33,6 +39,9 @@ public abstract class User {
         isFirstLogin = firstLogin;
     }
 
-    // Abstract method for each role's specific menu
+    public void setPassword(String newPassword) {
+        this.password = newPassword;
+    }
+
     public abstract void displayMenu();
 }

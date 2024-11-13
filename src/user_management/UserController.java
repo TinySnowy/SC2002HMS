@@ -1,6 +1,9 @@
 package user_management;
 
+import utils.CSVReaderUtil;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UserController {
@@ -8,6 +11,33 @@ public class UserController {
 
     public UserController() {
         userDatabase = new HashMap<>();
+        loadPatientData();
+    }
+
+    private void loadPatientData() {
+        List<String[]> records = CSVReaderUtil.readCSV("data/Patient_List.csv");
+
+        boolean isFirstRow = true; // Skip header row
+        for (String[] record : records) {
+            if (isFirstRow) {
+                isFirstRow = false;
+                continue;
+            }
+
+            String id = record[0];
+            String name = record[1];
+            String dateOfBirth = record[2];
+            String gender = record[3];
+            String bloodType = record[4];
+            String contactInfo = record[5];
+
+            // Creating a Patient object with default password "password"
+            Patient patient = new Patient(id, "password", name, contactInfo);
+            addUser(patient);
+
+            // Debug statement to confirm loading
+            System.out.println("Loaded patient: ID=" + patient.getId() + ", Name=" + patient.getName() + ", Password=default");
+        }
     }
 
     public void addUser(User user) {
@@ -16,13 +46,5 @@ public class UserController {
 
     public User getUserById(String id) {
         return userDatabase.get(id);
-    }
-
-    // Mock data method to populate users
-    public void initializeUsers() {
-        addUser(new Patient("P001", "pass123", "Alice", "alice@example.com"));
-        addUser(new Doctor("D001", "docpass", "Cardiology"));
-        addUser(new Pharmacist("PH001", "pharmpass", "L12345"));
-        addUser(new Administrator("A001", "adminpass"));
     }
 }
