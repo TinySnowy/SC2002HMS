@@ -7,13 +7,15 @@ public class Prescription {
     private Patient patient;
     private String medicationName;
     private String dosage;
+    private int quantity;
     private String status; // "Pending", "Fulfilled", "Cancelled"
 
-    public Prescription(String prescriptionId, Patient patient, String medicationName, String dosage) {
+    public Prescription(String prescriptionId, Patient patient, String medicationName, String dosage, int quantity) {
         this.prescriptionId = prescriptionId;
         this.patient = patient;
         this.medicationName = medicationName;
         this.dosage = dosage;
+        this.quantity = quantity;
         this.status = "Pending"; // Default status when prescription is created
     }
 
@@ -33,20 +35,34 @@ public class Prescription {
         return dosage;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
     public String getStatus() {
         return status;
     }
 
-    public void fulfill() {
-        this.status = "Fulfilled";
+    // Fulfill prescription and update inventory
+    public boolean fulfill(InventoryManager inventoryManager) {
+        if (inventoryManager.dispenseMedication(medicationName, quantity)) {
+            this.status = "Fulfilled";
+            System.out.println("Prescription fulfilled: " + prescriptionId);
+            return true;
+        } else {
+            System.out.println("Failed to fulfill prescription: " + prescriptionId);
+            return false;
+        }
     }
 
     public void cancel() {
         this.status = "Cancelled";
+        System.out.println("Prescription cancelled: " + prescriptionId);
     }
 
     @Override
     public String toString() {
-        return "Prescription ID: " + prescriptionId + ", Patient: " + patient.getName() + ", Medication: " + medicationName + ", Dosage: " + dosage + ", Status: " + status;
+        return "Prescription ID: " + prescriptionId + ", Patient: " + patient.getName() + ", Medication: " + medicationName +
+                ", Dosage: " + dosage + ", Quantity: " + quantity + ", Status: " + status;
     }
 }
