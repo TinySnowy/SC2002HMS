@@ -2,7 +2,10 @@ package appointment_management;
 
 import user_management.Patient;
 import user_management.Doctor;
+import pharmacy_management.Prescription;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Appointment {
     private String appointmentId;
@@ -12,7 +15,7 @@ public class Appointment {
     private String status; // Track the appointment status (e.g., Scheduled, Confirmed, Cancelled)
     private String serviceType; // Type of service provided (for outcome records)
     private String consultationNotes; // Doctor's consultation notes
-    private String prescribedMedications; // Medications prescribed during the appointment
+    private List<Prescription> prescriptions; // List of prescriptions for this appointment
 
     public Appointment(String appointmentId, Patient patient, Doctor doctor, LocalDateTime appointmentDate) {
         this.appointmentId = appointmentId;
@@ -20,6 +23,7 @@ public class Appointment {
         this.doctor = doctor;
         this.appointmentDate = appointmentDate;
         this.status = "Pending"; // Default status when created
+        this.prescriptions = new ArrayList<>();
     }
 
     public String getAppointmentId() {
@@ -56,12 +60,31 @@ public class Appointment {
         this.status = "Cancelled";
     }
 
-    // Methods for appointment outcome
-    public void setOutcome(String serviceType, String consultationNotes, String prescribedMedications) {
+    // Method to set appointment outcome without prescriptions
+    public void setOutcome(String serviceType, String consultationNotes, List<Prescription> prescriptions) {
         this.serviceType = serviceType;
         this.consultationNotes = consultationNotes;
-        this.prescribedMedications = prescribedMedications;
-        this.status = "Completed"; // Set status to completed once outcomes are recorded
+        this.status = "Completed";
+        this.prescriptions = prescriptions; // Store the list of prescriptions with the appointment outcome
+    }
+
+    // Method to add a prescription to the appointment
+    public void addPrescription(Prescription prescription) {
+        this.prescriptions.add(prescription);
+    }
+
+    // Display detailed outcome, including prescriptions
+    public void displayOutcome() {
+        if ("Completed".equals(status)) {
+            System.out.println("Service Type: " + serviceType);
+            System.out.println("Consultation Notes: " + consultationNotes);
+            System.out.println("Prescriptions:");
+            for (Prescription prescription : prescriptions) {
+                System.out.println("  - " + prescription.getMedicationName() + " (Status: " + prescription.getStatus() + ")");
+            }
+        } else {
+            System.out.println("No outcome recorded for this appointment.");
+        }
     }
 
     @Override
@@ -71,16 +94,5 @@ public class Appointment {
                 ", Doctor: " + (doctor != null ? doctor.getName() : "None") +
                 ", Date: " + appointmentDate +
                 ", Status: " + status;
-    }
-
-    // Display detailed outcome if available
-    public void displayOutcome() {
-        if ("Completed".equals(status)) {
-            System.out.println("Service Type: " + serviceType);
-            System.out.println("Consultation Notes: " + consultationNotes);
-            System.out.println("Prescribed Medications: " + prescribedMedications);
-        } else {
-            System.out.println("No outcome recorded for this appointment.");
-        }
     }
 }

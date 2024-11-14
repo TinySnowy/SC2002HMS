@@ -32,7 +32,7 @@ public class UserController {
             String contactInfo = record[5];
 
             // Creating a Patient object with default password "password"
-            Patient patient = new Patient(id, "password", name, contactInfo);
+            Patient patient = new Patient(id, "password", name, contactInfo,"john.doe@example.com");
             addUser(patient);
 
             // Debug statement to confirm loading

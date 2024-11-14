@@ -41,7 +41,7 @@ public class StaffManager {
                     user = new Administrator(id, "password", name);
                     break;
                 default:
-                    user = new Patient(id, "password", name, "contact@example.com");
+                    user = new Patient(id, "password", name, "contact@example.com","john.doe@example.com");
             }
 
             addStaff(user);

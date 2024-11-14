@@ -42,7 +42,6 @@ public class Prescription {
     public String getStatus() {
         return status;
     }
-
     // Fulfill prescription and update inventory
     public boolean fulfill(InventoryManager inventoryManager) {
         if (inventoryManager.dispenseMedication(medicationName, quantity)) {
@@ -64,5 +63,9 @@ public class Prescription {
     public String toString() {
         return "Prescription ID: " + prescriptionId + ", Patient: " + patient.getName() + ", Medication: " + medicationName +
                 ", Dosage: " + dosage + ", Quantity: " + quantity + ", Status: " + status;
+    }
+
+    public void setStatus(String fulfilled) {
+        this.status = "Fulfilled";
     }
 }

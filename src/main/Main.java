@@ -1,43 +1,37 @@
 package main;
 
-import login_system.LoginPage;
-import login_system.RoleSelector;
+import doctor_management.DoctorDashboard;
 import appointment_management.Appointment;
 import appointment_management.AppointmentList;
-import user_management.User;
 import user_management.Doctor;
 import user_management.Patient;
-import user_management.UserController;
+import pharmacy_management.Prescription;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // Initialize UserController and AppointmentList
-        UserController userController = new UserController();
+        // Initialize a sample doctor
+        Doctor doctor = new Doctor("D1001", "password", "Dr. John Doe", "Cardiology");
+        doctor.setAvailability("Mon-Fri: 9 AM - 5 PM");
+
+        // Initialize a sample patient
+        Patient patient = new Patient("P1001", "password", "Alice Smith", "123456789", "alice@example.com");
+
+        // Initialize AppointmentList and add sample appointments
         AppointmentList appointmentList = new AppointmentList();
+        Appointment appointment1 = new Appointment("A1001", patient, doctor, LocalDateTime.now().plusDays(1));
+        Appointment appointment2 = new Appointment("A1002", patient, doctor, LocalDateTime.now().plusDays(2));
 
-        // Create a test doctor and add to userController
-        Doctor testDoctor = new Doctor("D001", "password", "John Smith", "Cardiology");
-        userController.addUser(testDoctor);
+        appointmentList.addAppointment(appointment1);
+        appointmentList.addAppointment(appointment2);
 
-        // Create a test patient and add to userController
-        Patient testPatient = new Patient("P001", "password", "Alice Brown", "alice.brown@example.com");
-        userController.addUser(testPatient);
+        // Create the DoctorDashboard
+        DoctorDashboard doctorDashboard = new DoctorDashboard(doctor, appointmentList);
 
-        // Add a few test appointments to the appointment list
-        appointmentList.addAppointment(new Appointment("A001", testPatient, testDoctor, LocalDateTime.of(2024, 12, 1, 10, 30)));
-        appointmentList.addAppointment(new Appointment("A002", testPatient, testDoctor, LocalDateTime.of(2024, 12, 2, 11, 00)));
-
-        // Create RoleSelector and LoginPage with dependencies
-        RoleSelector roleSelector = new RoleSelector(appointmentList); // Pass appointmentList here
-        LoginPage loginPage = new LoginPage(userController, roleSelector); // Pass roleSelector to LoginPage
-
-        // Simulate login
-        User loggedInUser = loginPage.login();
-
-        if (loggedInUser == null) {
-            System.out.println("Login failed. Exiting.");
-        }
+        // Simulate the doctor's interaction with the dashboard
+        doctorDashboard.showDashboard();
     }
 }

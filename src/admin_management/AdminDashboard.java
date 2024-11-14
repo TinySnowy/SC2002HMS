@@ -57,7 +57,7 @@ public class AdminDashboard {
         String role = scanner.nextLine();
 
         User newUser = switch (role) {
-            case "Patient" -> new Patient(id, "password", name, "contact@example.com");
+            case "Patient" -> new Patient(id, "password", name, "contact@example.com","john.doe@example.com");
             case "Doctor" -> new Doctor(id, "password", "General Medicine", name); // Updated with name parameter
             case "Pharmacist" -> new Pharmacist(id, "password", "License123", name);
             case "Administrator" -> new Administrator(id, "password", name);

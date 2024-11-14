@@ -1,15 +1,12 @@
 package doctor_management;
 
 import patient_management.MedicalRecord;
-
+import user_management.Patient;
 import java.util.Scanner;
 
 public class MedicalRecordUpdater {
-    public void updateRecords() {
+    public void updateRecords(String patientId) {
         Scanner scanner = new Scanner(System.in);
-
-        System.out.print("Enter Patient ID: ");
-        String patientId = scanner.nextLine();
 
         // Logic to fetch the patient's medical record using the ID
         MedicalRecord record = fetchMedicalRecord(patientId);
@@ -32,7 +29,9 @@ public class MedicalRecordUpdater {
 
     private MedicalRecord fetchMedicalRecord(String patientId) {
         // Logic to fetch the medical record from a database or list
-        // For now, return a dummy record for testing
-        return new MedicalRecord(patientId, "John Doe", "Flu", "Rest and hydration");
+        // For now, return a dummy record for testing purposes
+        Patient dummyPatient = new Patient(patientId, "password", "John Doe", "contact@example.com", "john.doe@example.com");
+        return new MedicalRecord(dummyPatient);
     }
+
 }

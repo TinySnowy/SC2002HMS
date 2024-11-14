@@ -15,7 +15,8 @@ public class InventoryControl {
     }
 
     public void approveRefill(String medicationName, int quantity) {
-        System.out.println("Admin approved refill for " + quantity + " units of " + medicationName);
-        inventoryManager.requestRefill(medicationName, quantity);
+        String defaultExpiryDate = "12/31/2024"; // Placeholder expiry date
+        System.out.println("Admin approved refill for " + quantity + " units of " + medicationName + " with expiry date " + defaultExpiryDate);
+        inventoryManager.requestRefill(medicationName, quantity, defaultExpiryDate);
     }
 }

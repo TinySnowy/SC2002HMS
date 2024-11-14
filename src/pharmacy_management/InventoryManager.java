@@ -6,10 +6,12 @@ import java.util.Map;
 public class InventoryManager {
     // Map to store medication, quantity, and expiry date
     private Map<String, Map<String, Integer>> inventory; // {MedicationName: {ExpiryDate: Quantity}}
+    private Map<String, Prescription> prescriptions; // Stores prescriptions by ID
     private int lowStockThreshold = 10;
 
     public InventoryManager() {
         inventory = new HashMap<>();
+        prescriptions = new HashMap<>();
     }
 
     // Add medication with expiry date and quantity
@@ -70,6 +72,36 @@ public class InventoryManager {
 
         if (totalStock < lowStockThreshold) {
             System.out.println("Warning: Low stock for " + medicationName + ". Total stock: " + totalStock + " units.");
+        }
+    }
+
+    // Add a prescription to the inventory manager
+    public void addPrescription(Prescription prescription) {
+        prescriptions.put(prescription.getPrescriptionId(), prescription);
+        System.out.println("Added prescription: " + prescription);
+    }
+
+    // Retrieve a prescription by ID
+    public Prescription getPrescriptionById(String prescriptionId) {
+        return prescriptions.get(prescriptionId);
+    }
+
+    // Fulfill a prescription by dispensing the required medication
+    public boolean fulfillPrescription(String prescriptionId) {
+        Prescription prescription = getPrescriptionById(prescriptionId);
+        if (prescription == null) {
+            System.out.println("Prescription not found.");
+            return false;
+        }
+
+        boolean dispensed = dispenseMedication(prescription.getMedicationName(), prescription.getQuantity());
+        if (dispensed) {
+            prescription.setStatus("Fulfilled");
+            System.out.println("Prescription fulfilled: " + prescriptionId);
+            return true;
+        } else {
+            System.out.println("Failed to fulfill prescription: " + prescriptionId);
+            return false;
         }
     }
 }
