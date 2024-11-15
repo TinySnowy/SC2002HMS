@@ -4,6 +4,8 @@ import user_management.*;
 import utils.CSVReaderUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class StaffManager {
     private List<User> staff;
@@ -26,8 +28,6 @@ public class StaffManager {
             String id = record[0];
             String name = record[1];
             String role = record[2];
-            String gender = record[3];
-            int age = Integer.parseInt(record[4]);
 
             User user;
             switch (role) {
@@ -41,7 +41,8 @@ public class StaffManager {
                     user = new Administrator(id, "password", name);
                     break;
                 default:
-                    user = new Patient(id, "password", name, "contact@example.com","john.doe@example.com");
+                    System.out.println("Invalid role in staff CSV: " + role + ". Skipping entry.");
+                    continue; // Skip invalid entries like patients
             }
 
             addStaff(user);
@@ -61,6 +62,30 @@ public class StaffManager {
     public void listAllStaff() {
         System.out.println("Current Staff Members:");
         for (User user : staff) {
+            System.out.println("ID: " + user.getId() + ", Name: " + user.getName() + ", Role: " + user.getRole());
+        }
+    }
+
+    public void filterStaff(String criteria) {
+        Scanner scanner = new Scanner(System.in);
+        List<User> filteredStaff;
+
+        switch (criteria.toLowerCase()) {
+            case "role":
+                System.out.print("Enter role to filter by (Doctor, Pharmacist, Administrator): ");
+                String role = scanner.nextLine();
+                filteredStaff = staff.stream()
+                        .filter(user -> user.getRole().equalsIgnoreCase(role))
+                        .collect(Collectors.toList());
+                break;
+
+            default:
+                System.out.println("Invalid criteria. Please enter 'role'.");
+                return;
+        }
+
+        System.out.println("Filtered Staff Members:");
+        for (User user : filteredStaff) {
             System.out.println("ID: " + user.getId() + ", Name: " + user.getName() + ", Role: " + user.getRole());
         }
     }

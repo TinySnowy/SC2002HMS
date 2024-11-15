@@ -1,4 +1,4 @@
-Medicine Name,Initial Stock,Low Stock Level Alert
-Paracetamol,100,20
-Ibuprofen,50,10
-Amoxicillin,75,15
+Medication Name,Initial Stock,Low Stock Threshold,Expiry Date
+Paracetamol,100,20,2024-12-31
+Ibuprofen,50,10,2025-01-15
+Amoxicillin,75,15,2024-11-30

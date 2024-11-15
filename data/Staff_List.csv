@@ -1,5 +1,7 @@
-Staff ID,Name,Role,Gender,Age
-D001,John Smith,Doctor,Male,45
-D002,Emily Clarke,Doctor,Female,38
-P001,Mark Lee,Pharmacist,Male,29
-A001,Sarah Lee,Administrator,Female,40
+ID,Name,Role,Specialty/License
+D002,Pediatrics,Doctor,Dr. Bob White
+D001,Orthopedics,Doctor,Dr. Alice Green
+P001,Pharmacist Anna Taylor,Pharmacist,License12345
+P002,Pharmacist Ryan Martin,Pharmacist,License67890
+A001,Admin Kevin Lee,Administrator,
+A002,Admin Laura King,Administrator,

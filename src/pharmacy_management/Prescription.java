@@ -42,7 +42,7 @@ public class Prescription {
     public String getStatus() {
         return status;
     }
-    // Fulfill prescription and update inventory
+
     public boolean fulfill(InventoryManager inventoryManager) {
         if (inventoryManager.dispenseMedication(medicationName, quantity)) {
             this.status = "Fulfilled";
@@ -61,11 +61,15 @@ public class Prescription {
 
     @Override
     public String toString() {
-        return "Prescription ID: " + prescriptionId + ", Patient: " + patient.getName() + ", Medication: " + medicationName +
-                ", Dosage: " + dosage + ", Quantity: " + quantity + ", Status: " + status;
+        return "Prescription ID: " + prescriptionId +
+                ", Patient: " + (patient != null ? patient.getName() : "Unknown") +
+                ", Medication: " + medicationName +
+                ", Dosage: " + dosage +
+                ", Quantity: " + quantity +
+                ", Status: " + status;
     }
 
-    public void setStatus(String fulfilled) {
-        this.status = "Fulfilled";
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

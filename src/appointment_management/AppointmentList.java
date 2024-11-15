@@ -26,4 +26,14 @@ public class AppointmentList {
     public List<Appointment> getAllAppointments() {
         return appointments;
     }
+
+    public List<Appointment> getAppointmentsByStatus(String status) {
+        List<Appointment> filteredAppointments = new ArrayList<>();
+        for (Appointment appointment : appointments) {
+            if (appointment.getStatus().equalsIgnoreCase(status)) {
+                filteredAppointments.add(appointment);
+            }
+        }
+        return filteredAppointments;
+    }
 }

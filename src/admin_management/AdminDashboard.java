@@ -3,18 +3,24 @@ package admin_management;
 import user_management.*;
 import pharmacy_management.InventoryManager;
 import appointment_management.AppointmentList;
+import appointment_management.Appointment;
 import java.util.Scanner;
+import java.util.List;
 
 public class AdminDashboard {
     private StaffManager staffManager;
     private InventoryControl inventoryControl;
     private AppointmentViewer appointmentViewer;
+    private InventoryManager inventoryManager;
+    private AppointmentList appointmentList;
     private Scanner scanner;
 
     public AdminDashboard(InventoryManager inventoryManager, AppointmentList appointmentList) {
         this.staffManager = new StaffManager();
         this.inventoryControl = new InventoryControl(inventoryManager);
         this.appointmentViewer = new AppointmentViewer(appointmentList);
+        this.inventoryManager = inventoryManager;
+        this.appointmentList = appointmentList;
         this.scanner = new Scanner(System.in);
     }
 
@@ -26,8 +32,10 @@ public class AdminDashboard {
             System.out.println("3. Remove Staff");
             System.out.println("4. View Inventory");
             System.out.println("5. Approve Refill Request");
-            System.out.println("6. View All Appointments");
-            System.out.println("7. Exit");
+            System.out.println("6. View Low Stock Alerts");
+            System.out.println("7. Filter Staff");
+            System.out.println("8. View Completed Appointment Outcomes");
+            System.out.println("9. Exit");
             System.out.print("Enter choice: ");
             int choice = scanner.nextInt();
             scanner.nextLine(); // consume newline
@@ -38,8 +46,10 @@ public class AdminDashboard {
                 case 3 -> removeStaff();
                 case 4 -> inventoryControl.viewInventory();
                 case 5 -> approveRefill();
-                case 6 -> appointmentViewer.viewAllAppointments();
-                case 7 -> {
+                case 6 -> viewLowStockAlerts();
+                case 7 -> filterStaff();
+                case 8 -> viewCompletedAppointments();
+                case 9 -> {
                     System.out.println("Exiting Admin Dashboard.");
                     return;
                 }
@@ -57,8 +67,8 @@ public class AdminDashboard {
         String role = scanner.nextLine();
 
         User newUser = switch (role) {
-            case "Patient" -> new Patient(id, "password", name, "contact@example.com","john.doe@example.com");
-            case "Doctor" -> new Doctor(id, "password", "General Medicine", name); // Updated with name parameter
+            case "Patient" -> new Patient(id, "password", name, "contact@example.com", "john.doe@example.com");
+            case "Doctor" -> new Doctor(id, "password", "General Medicine", name);
             case "Pharmacist" -> new Pharmacist(id, "password", "License123", name);
             case "Administrator" -> new Administrator(id, "password", name);
             default -> {
@@ -85,5 +95,25 @@ public class AdminDashboard {
         int quantity = scanner.nextInt();
         scanner.nextLine(); // consume newline
         inventoryControl.approveRefill(medName, quantity);
+    }
+
+    private void viewLowStockAlerts() {
+        System.out.println("\nLow Stock Alerts:");
+        inventoryManager.checkAllLowStock();
+    }
+
+    private void filterStaff() {
+        System.out.print("Enter filter criteria (role, gender, or age): ");
+        String criteria = scanner.nextLine();
+        staffManager.filterStaff(criteria);
+    }
+
+    private void viewCompletedAppointments() {
+        System.out.println("\nCompleted Appointment Outcomes:");
+        List<Appointment> completedAppointments = appointmentList.getAppointmentsByStatus("Completed");
+        for (Appointment appointment : completedAppointments) {
+            System.out.println(appointment);
+            appointment.displayOutcome();
+        }
     }
 }
