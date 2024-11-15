@@ -126,6 +126,26 @@ public class UserController {
             System.err.println("Error persisting patient data: " + e.getMessage());
         }
     }
+    // Retrieve a Patient by ID
+    public Patient getPatientById(String id) {
+        User user = userDatabase.get(id);
+        if (user instanceof Patient) {
+            return (Patient) user;
+        }
+        System.err.println("No patient found with ID: " + id);
+        return null;
+    }
+
+    // Retrieve a Doctor by ID
+    public Doctor getDoctorById(String id) {
+        User user = userDatabase.get(id);
+        if (user instanceof Doctor) {
+            return (Doctor) user;
+        }
+        System.err.println("No doctor found with ID: " + id);
+        return null;
+    }
+
 
     private void persistStaffData() {
         try (FileWriter writer = new FileWriter("data/Staff_List.csv")) {

@@ -34,6 +34,29 @@ public class MedicalRecord {
         updateMedicalHistory();
     }
 
+//    public void setNotes(String notes) {
+//        this.notes = notes;
+//    }
+
+    public String getPatientId() {
+        return patient.getId();
+    }
+
+    public String getPatientName() {
+        return patient.getName();
+    }
+
+    public String getDiagnosis() {
+        return diagnosis;
+    }
+
+    public String getPrescription() {
+        return prescription;
+    }
+
+//    public String getNotes() {
+//        return notes;
+//    }
     // Updates the medical history based on the latest diagnosis and prescription
     private void updateMedicalHistory() {
         this.medicalHistory = "Diagnosis: " + (diagnosis.isEmpty() ? "N/A" : diagnosis) +

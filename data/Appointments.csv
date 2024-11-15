@@ -1,0 +1,3 @@
+AppointmentID,PatientID,DoctorID,Date,Status,ServiceType,ConsultationNotes
+A001,P1001,D001,2024-11-17 05:18,Cancelled,,
+A002,P1001,D001,2024-11-18 05:18,Confirmed,,

@@ -2,6 +2,7 @@ package doctor_management;
 
 import appointment_management.Appointment;
 import appointment_management.AppointmentList;
+import patient_management.MedicalRecordController;
 import pharmacy_management.Prescription;
 import user_management.Doctor;
 import patient_management.MedicalRecord;
@@ -21,7 +22,8 @@ public class DoctorDashboard {
         this.doctor = doctor;
         this.appointmentList = appointmentList;
         this.scheduleManager = new ScheduleManager();
-        this.medicalRecordUpdater = new MedicalRecordUpdater();
+        MedicalRecordController medicalRecordController = new MedicalRecordController();
+        this.medicalRecordUpdater = new MedicalRecordUpdater(medicalRecordController);
         this.scanner = new Scanner(System.in);
     }
 

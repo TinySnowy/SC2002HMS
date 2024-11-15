@@ -28,7 +28,7 @@ public class RoleSelector {
             }
             case "Patient" -> {
                 System.out.println("Navigating to Patient Dashboard...");
-                PatientDashboard patientDashboard = new PatientDashboard((Patient) user);
+                PatientDashboard patientDashboard = new PatientDashboard((Patient) user, appointmentList);
                 patientDashboard.showDashboard();
             }
             case "Pharmacist" -> {

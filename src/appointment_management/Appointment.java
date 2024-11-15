@@ -3,6 +3,7 @@ package appointment_management;
 import user_management.Patient;
 import user_management.Doctor;
 import pharmacy_management.Prescription;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +47,20 @@ public class Appointment {
         return status;
     }
 
+    public void setStatus(String status) {
+        this.status = status; // Allow setting the status directly
+    }
+
     public void setAppointmentDate(LocalDateTime appointmentDate) {
         this.appointmentDate = appointmentDate;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public String getConsultationNotes() {
+        return consultationNotes;
     }
 
     // Method to confirm the appointment
@@ -60,7 +73,7 @@ public class Appointment {
         this.status = "Cancelled";
     }
 
-    // Method to set appointment outcome without prescriptions
+    // Method to set appointment outcome
     public void setOutcome(String serviceType, String consultationNotes, List<Prescription> prescriptions) {
         this.serviceType = serviceType;
         this.consultationNotes = consultationNotes;
@@ -90,7 +103,7 @@ public class Appointment {
     @Override
     public String toString() {
         return "Appointment ID: " + appointmentId +
-                ", Patient: " + patient.getName() +
+                ", Patient: " + (patient != null ? patient.getName() : "None") +
                 ", Doctor: " + (doctor != null ? doctor.getName() : "None") +
                 ", Date: " + appointmentDate +
                 ", Status: " + status;

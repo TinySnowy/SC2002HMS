@@ -43,5 +43,10 @@ public abstract class User {
         this.password = newPassword;
     }
 
+    // New authenticate method
+    public boolean authenticate(String inputPassword) {
+        return this.password.equals(inputPassword);
+    }
+
     public abstract void displayMenu();
 }
