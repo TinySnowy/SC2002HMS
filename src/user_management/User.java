@@ -1,34 +1,44 @@
 package user_management;
 
+import utils.PasswordUtil;
+
 public abstract class User {
     protected String id;
-    protected String name;  // Add name field here
-    protected String password;
+    protected String name;
     protected String role;
-    protected boolean isFirstLogin;
+    private String passwordHash;
+    private boolean isFirstLogin;
 
-    public User(String id, String password, String role, String name) {
+    public User(String id, String name, String role, String rawPassword, boolean isFirstLogin) {
         this.id = id;
-        this.password = password;
-        this.role = role;
         this.name = name;
-        this.isFirstLogin = true;
+        this.role = role;
+        this.passwordHash = PasswordUtil.hashPassword(rawPassword);
+        this.isFirstLogin = isFirstLogin;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getPassword() {
-        return password;
+    public String getName() {
+        return name;
     }
 
     public String getRole() {
         return role;
     }
 
-    public String getName() {
-        return name;  // Getter for name
+    public boolean authenticate(String inputPassword) {
+        return PasswordUtil.verifyPassword(inputPassword, this.passwordHash);
+    }
+
+    public void setPassword(String newPassword) {
+        this.passwordHash = PasswordUtil.hashPassword(newPassword);
+    }
+
+    public String getPasswordHash() {
+        return this.passwordHash;
     }
 
     public boolean isFirstLogin() {
@@ -36,17 +46,6 @@ public abstract class User {
     }
 
     public void setFirstLogin(boolean firstLogin) {
-        isFirstLogin = firstLogin;
+        this.isFirstLogin = firstLogin;
     }
-
-    public void setPassword(String newPassword) {
-        this.password = newPassword;
-    }
-
-    // New authenticate method
-    public boolean authenticate(String inputPassword) {
-        return this.password.equals(inputPassword);
-    }
-
-    public abstract void displayMenu();
 }

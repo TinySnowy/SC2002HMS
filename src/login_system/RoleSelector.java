@@ -21,23 +21,25 @@ public class RoleSelector {
 
     public void navigateToRoleDashboard(User user) {
         switch (user.getRole()) {
-            case "Doctor" -> {
+            case "Doctor": {
                 System.out.println("Navigating to Doctor Dashboard...");
                 DoctorDashboard doctorDashboard = new DoctorDashboard((Doctor) user, appointmentList);
                 doctorDashboard.showDashboard();
             }
-            case "Patient" -> {
+            case "Patient": {
                 System.out.println("Navigating to Patient Dashboard...");
                 PatientDashboard patientDashboard = new PatientDashboard((Patient) user, appointmentList);
                 patientDashboard.showDashboard();
             }
-            case "Pharmacist" -> {
+            case "Pharmacist": {
                 System.out.println("Navigating to Pharmacist Dashboard...");
                 PharmacistDashboard pharmacistDashboard = new PharmacistDashboard((Pharmacist) user, inventoryManager);
                 pharmacistDashboard.showDashboard();
             }
-            case "Administrator" -> System.out.println("Navigating to Admin Dashboard...");
-            default -> System.out.println("Unknown role. Unable to navigate.");
+            case "Administrator":
+                System.out.println("Navigating to Admin Dashboard...");
+            default:
+                System.out.println("Unknown role. Unable to navigate.");
         }
     }
 }

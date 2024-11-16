@@ -1,49 +1,25 @@
 package patient_management;
 
-import user_management.Patient;
-
 public class MedicalRecord {
-    private Patient patient;
+    private String patientId;
+    private String patientName;
     private String diagnosis;
     private String prescription;
-    private String medicalHistory;
 
-    public MedicalRecord(Patient patient) {
-        this.patient = patient;
-        this.medicalHistory = "No medical records available."; // Default message
-        this.diagnosis = "";
-        this.prescription = "";
-    }
-
-    // Method to get the details of the medical record
-    public String getDetails() {
-        return "Patient ID: " + patient.getId() +
-                ", Name: " + patient.getName() +
-                ", Diagnosis: " + (diagnosis.isEmpty() ? "N/A" : diagnosis) +
-                ", Prescription: " + (prescription.isEmpty() ? "N/A" : prescription);
-    }
-
-    // Setters for diagnosis and prescription
-    public void setDiagnosis(String diagnosis) {
+    public MedicalRecord(String patientId, String patientName, String diagnosis, String prescription) {
+        this.patientId = patientId;
+        this.patientName = patientName;
         this.diagnosis = diagnosis;
-        updateMedicalHistory();
-    }
-
-    public void setPrescription(String prescription) {
         this.prescription = prescription;
-        updateMedicalHistory();
     }
 
-//    public void setNotes(String notes) {
-//        this.notes = notes;
-//    }
-
+    // Getters
     public String getPatientId() {
-        return patient.getId();
+        return patientId;
     }
 
     public String getPatientName() {
-        return patient.getName();
+        return patientName;
     }
 
     public String getDiagnosis() {
@@ -54,18 +30,29 @@ public class MedicalRecord {
         return prescription;
     }
 
-//    public String getNotes() {
-//        return notes;
-//    }
-    // Updates the medical history based on the latest diagnosis and prescription
-    private void updateMedicalHistory() {
-        this.medicalHistory = "Diagnosis: " + (diagnosis.isEmpty() ? "N/A" : diagnosis) +
-                "\nPrescription: " + (prescription.isEmpty() ? "N/A" : prescription);
+    // Setters
+    public void setDiagnosis(String diagnosis) {
+        this.diagnosis = diagnosis;
     }
 
-    // Method to display the medical history
+    public void setPrescription(String prescription) {
+        this.prescription = prescription;
+    }
+
+    // Display method for the record
     public void displayRecord() {
-        System.out.println("\nMedical Record for " + patient.getName() + ":");
-        System.out.println(medicalHistory);
+        System.out.println("\nMedical Record for " + patientName);
+        System.out.println("----------------------------------------");
+        System.out.println("Patient ID: " + patientId);
+        System.out.println("Name: " + patientName);
+        System.out.println("Diagnosis: " + (diagnosis.isEmpty() ? "None" : diagnosis));
+        System.out.println("Prescription: " + (prescription.isEmpty() ? "None" : prescription));
+        System.out.println("----------------------------------------");
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Patient: %s (%s)\nDiagnosis: %s\nPrescription: %s",
+                patientName, patientId, diagnosis, prescription);
     }
 }

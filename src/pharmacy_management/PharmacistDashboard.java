@@ -26,14 +26,18 @@ public class PharmacistDashboard {
             scanner.nextLine(); // Consume newline
 
             switch (choice) {
-                case 1 -> viewInventory();
-                case 2 -> fulfillPrescription();
-                case 3 -> requestRefill();
-                case 4 -> {
+                case 1:
+                    viewInventory();
+                case 2:
+                    fulfillPrescription();
+                case 3:
+                    requestRefill();
+                case 4: {
                     System.out.println("Logging out of Pharmacist Dashboard...");
                     return;
                 }
-                default -> System.out.println("Invalid choice. Please try again.");
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
         }
     }
@@ -69,6 +73,7 @@ public class PharmacistDashboard {
         String expiryDate = scanner.nextLine();
 
         inventoryManager.requestRefill(medicationName, quantity, expiryDate);
-        System.out.println("Refill request submitted for " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
+        System.out.println("Refill request submitted for " + quantity + " units of " + medicationName + " (Expiry: "
+                + expiryDate + ").");
     }
 }

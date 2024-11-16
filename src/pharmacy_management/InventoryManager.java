@@ -19,7 +19,8 @@ public class InventoryManager {
     public void loadInventoryFromCSV(String filePath) {
         try {
             CSVReaderUtil.readCSV(filePath, (line) -> {
-                if (line[0].equalsIgnoreCase("Medication Name")) return;
+                if (line[0].equalsIgnoreCase("Medication Name"))
+                    return;
 
                 String medicationName = line[0];
                 int initialStock = Integer.parseInt(line[1]);
@@ -40,7 +41,8 @@ public class InventoryManager {
         Map<String, Integer> stockByDate = inventory.get(medicationName);
         stockByDate.put(expiryDate, stockByDate.getOrDefault(expiryDate, 0) + quantity);
 
-        System.out.println("Added " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ") to inventory.");
+        System.out.println(
+                "Added " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ") to inventory.");
         checkLowStock(medicationName);
     }
 
@@ -88,7 +90,8 @@ public class InventoryManager {
 
             if (stock >= quantity) {
                 stockByDate.put(expiryDate, stock - quantity);
-                System.out.println("Dispensed " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
+                System.out.println(
+                        "Dispensed " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
                 return true;
             }
         }
@@ -114,11 +117,12 @@ public class InventoryManager {
             checkLowStock(medicationName);
         }
     }
+
     public void requestRefill(String medicationName, int quantity, String expiryDate) {
-        System.out.println("Refill request for " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
+        System.out.println(
+                "Refill request for " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
         addMedication(medicationName, quantity, expiryDate);
     }
-
 
     public void checkLowStock(String medicationName) {
         Map<String, Integer> stockByDate = inventory.get(medicationName);

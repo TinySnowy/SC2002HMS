@@ -2,16 +2,19 @@ package user_management;
 
 public class Doctor extends User {
     private String specialty;
-    private String availability; // New field for availability
+    private String availability;
 
-    public Doctor(String id, String password, String name, String specialty) {
-        super(id, password, "Doctor", name);
+    public Doctor(String id, String name, String rawPassword, String specialty, boolean isFirstLogin) {
+        super(id, name, "Doctor", rawPassword, isFirstLogin);
         this.specialty = specialty;
-        this.availability = "Not set"; // Default message
     }
 
     public String getSpecialty() {
         return specialty;
+    }
+
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
     }
 
     public String getAvailability() {
@@ -22,8 +25,15 @@ public class Doctor extends User {
         this.availability = availability;
     }
 
-    @Override
     public void displayMenu() {
-        System.out.println("Doctor Menu");
+        System.out.println("Doctor Menu:");
+        System.out.println("1. View Patient Medical Records");
+        System.out.println("2. Update Patient Medical Records");
+        System.out.println("3. View Personal Schedule");
+        System.out.println("4. Set Availability for Appointments");
+        System.out.println("5. Accept or Decline Appointment Requests");
+        System.out.println("6. View Upcoming Appointments");
+        System.out.println("7. Record Appointment Outcome");
+        System.out.println("8. Logout");
     }
 }

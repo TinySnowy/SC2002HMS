@@ -28,10 +28,14 @@ public class AppointmentHandler {
         scanner.nextLine(); // Consume newline
 
         switch (choice) {
-            case 1 -> scheduleAppointment();
-            case 2 -> rescheduleAppointment();
-            case 3 -> cancelAppointment();
-            default -> System.out.println("Invalid choice. Returning to dashboard.");
+            case 1:
+                scheduleAppointment();
+            case 2:
+                rescheduleAppointment();
+            case 3:
+                cancelAppointment();
+            default:
+                System.out.println("Invalid choice. Returning to dashboard.");
         }
     }
 
@@ -41,7 +45,8 @@ public class AppointmentHandler {
         LocalDateTime dateTime = LocalDateTime.parse(dateTimeInput.replace(" ", "T"));
         String appointmentId = "A" + (appointmentList.getAllAppointments().size() + 1);
 
-        Appointment appointment = new Appointment(appointmentId, patient, null, dateTime); // Doctor set to null for simplicity
+        Appointment appointment = new Appointment(appointmentId, patient, null, dateTime); // Doctor set to null for
+                                                                                           // simplicity
         appointmentList.addAppointment(appointment);
         System.out.println("Appointment scheduled: " + appointment);
     }

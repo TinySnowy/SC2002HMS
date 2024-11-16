@@ -1,16 +1,17 @@
 package user_management;
 
 import utils.CSVReaderUtil;
+import utils.CSVWriterUtil;
+import utils.PasswordUtil;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class UserController {
-    private Map<String, User> userDatabase;
+    private final Map<String, User> userDatabase;
+    private static final String STAFF_FILE = "SC2002HMS/data/Staff_List.csv";
+    private static final String PATIENT_FILE = "SC2002HMS/data/Patient_List.csv";
 
     public UserController() {
         userDatabase = new HashMap<>();
@@ -18,161 +19,121 @@ public class UserController {
         loadStaffData();
     }
 
-    // Getter for userDatabase
-    public Map<String, User> getUserDatabase() {
-        return userDatabase;
-    }
-
-    // Load Patient Data from Patient_List.csv
     private void loadPatientData() {
-        List<String[]> records = CSVReaderUtil.readCSV("data/Patient_List.csv");
+        List<String[]> records = CSVReaderUtil.readCSV(PATIENT_FILE);
+        boolean isFirstRow = true;
 
-        boolean isFirstRow = true; // Skip header row
         for (String[] record : records) {
             if (isFirstRow) {
                 isFirstRow = false;
                 continue;
             }
 
-            String id = record[0];
-            String name = record[1];
-            String contactInfo = record[2];
-            String email = record[3];
-
-            Patient patient = new Patient(id, "password", name, contactInfo, email);
-            addUser(patient);
-
-            System.out.println("Loaded patient: ID=" + patient.getId() + ", Name=" + patient.getName());
-        }
-    }
-
-    // Load Staff Data from Staff_List.csv
-    private void loadStaffData() {
-        List<String[]> records = CSVReaderUtil.readCSV("data/Staff_List.csv");
-
-        boolean isFirstRow = true; // Skip header row
-        for (String[] record : records) {
             try {
-                if (isFirstRow) {
-                    isFirstRow = false;
-                    continue;
-                }
-
-                // Validate row length
-                if (record.length < 4) {
-                    System.err.println("Skipping malformed row: " + String.join(",", record));
-                    continue;
-                }
-
                 String id = record[0];
                 String name = record[1];
-                String role = record[2];
-                String field1 = record[3]; // Specialty/License
-                String field2 = (record.length > 4) ? record[4] : ""; // Optional additional field
+                String contactInfo = record[2];
+                String email = record[3];
 
-                User user = switch (role) {
-                    case "Doctor" -> new Doctor(id, "password", field1, name);
-                    case "Pharmacist" -> new Pharmacist(id, "password", field1, name);
-                    case "Administrator" -> new Administrator(id, "password", name);
-                    default -> {
-                        System.err.println("Unknown or misplaced role in staff data: " + role);
-                        yield null;
-                    }
-                };
-
-                if (user != null) {
-                    addUser(user);
-                    System.out.println("Loaded staff: ID=" + id + ", Name=" + name + ", Role=" + role);
-                }
+                // Set default password as "password"
+                String defaultPassword = PasswordUtil.hashPassword("password");
+                Patient patient = new Patient(id, name, defaultPassword, contactInfo, email, true);
+                addUser(patient);
             } catch (Exception e) {
-                System.err.println("Error processing row: " + String.join(",", record) + " - " + e.getMessage());
+                System.err.println("Error parsing patient row: " + String.join(",", record));
             }
         }
     }
 
+    private void loadStaffData() {
+        List<String[]> records = CSVReaderUtil.readCSV(STAFF_FILE);
+        boolean isFirstRow = true;
 
-    // Add user
-    public void addUser(User user) {
-        userDatabase.put(user.getId(), user);
+        for (String[] record : records) {
+            if (isFirstRow) {
+                isFirstRow = false;
+                continue;
+            }
+
+            try {
+                String id = record[0];
+                String specialty_license = record[1];
+                String role = record[2];
+                String name = record[3];
+
+                // Set default password as "password"
+                String defaultPassword = PasswordUtil.hashPassword("password");
+
+                User user = null;
+                switch (role) {
+                    case "Doctor":
+                        user = new Doctor(id, name, defaultPassword, specialty_license, true);
+                        break;
+                    case "Pharmacist":
+                        user = new Pharmacist(id, name, defaultPassword, specialty_license, true);
+                        break;
+                }
+
+                if (user != null) {
+                    addUser(user);
+                }
+            } catch (Exception e) {
+                System.err.println("Error parsing staff row: " + String.join(",", record));
+            }
+        }
     }
 
-    // Retrieve user by ID
+    public void addUser(User user) {
+        if (userDatabase.containsKey(user.getId())) {
+            System.err.println("Duplicate user ID detected: " + user.getId());
+        } else {
+            userDatabase.put(user.getId(), user);
+        }
+    }
+
     public User getUserById(String id) {
         return userDatabase.get(id);
     }
 
-    // Persist Data to Separate Files
-    public void persistData() {
+    public void persistPatientData() {
+        CSVWriterUtil.writeCSV(PATIENT_FILE, writer -> {
+            writer.write("ID,Name,Contact Info,Email\n");
+            for (User user : userDatabase.values()) {
+                if (user instanceof Patient) {
+                    Patient patient = (Patient) user;
+                    writer.write(String.format("%s,%s,%s,%s\n",
+                            patient.getId(),
+                            patient.getName(),
+                            patient.getContactInfo(),
+                            patient.getEmail()));
+                }
+            }
+        });
+    }
+
+    public void persistStaffData() {
+        CSVWriterUtil.writeCSV(STAFF_FILE, writer -> {
+            writer.write("ID,Name,Role,Specialty/License\n");
+            for (User user : userDatabase.values()) {
+                if (user instanceof Doctor) {
+                    Doctor doctor = (Doctor) user;
+                    writer.write(String.format("%s,%s,Doctor,%s\n",
+                            doctor.getId(),
+                            doctor.getSpecialty(),
+                            doctor.getName()));
+                } else if (user instanceof Pharmacist) {
+                    Pharmacist pharmacist = (Pharmacist) user;
+                    writer.write(String.format("%s,%s,Pharmacist,%s\n",
+                            pharmacist.getId(),
+                            pharmacist.getName(),
+                            pharmacist.getLicenseNumber()));
+                }
+            }
+        });
+    }
+
+    public void persistAllData() {
         persistPatientData();
         persistStaffData();
-    }
-
-    private void persistPatientData() {
-        try (FileWriter writer = new FileWriter("data/Patient_List.csv")) {
-            // Write header
-            writer.write("ID,Name,Contact Info,Email\n");
-
-            for (User user : userDatabase.values()) {
-                if (user instanceof Patient patient) {
-                    writer.write(patient.getId() + "," +
-                            patient.getName() + "," +
-                            patient.getContactInfo() + "," +
-                            patient.getEmail() + "\n");
-                }
-            }
-
-            System.out.println("Patient data persisted successfully!");
-        } catch (IOException e) {
-            System.err.println("Error persisting patient data: " + e.getMessage());
-        }
-    }
-    // Retrieve a Patient by ID
-    public Patient getPatientById(String id) {
-        User user = userDatabase.get(id);
-        if (user instanceof Patient) {
-            return (Patient) user;
-        }
-        System.err.println("No patient found with ID: " + id);
-        return null;
-    }
-
-    // Retrieve a Doctor by ID
-    public Doctor getDoctorById(String id) {
-        User user = userDatabase.get(id);
-        if (user instanceof Doctor) {
-            return (Doctor) user;
-        }
-        System.err.println("No doctor found with ID: " + id);
-        return null;
-    }
-
-
-    private void persistStaffData() {
-        try (FileWriter writer = new FileWriter("data/Staff_List.csv")) {
-            // Write header
-            writer.write("ID,Name,Role,Specialty/License\n");
-
-            for (User user : userDatabase.values()) {
-                if (user instanceof Doctor doctor) {
-                    writer.write(doctor.getId() + "," +
-                            doctor.getName() + "," +
-                            "Doctor," +
-                            doctor.getSpecialty() + "\n");
-                } else if (user instanceof Pharmacist pharmacist) {
-                    writer.write(pharmacist.getId() + "," +
-                            pharmacist.getName() + "," +
-                            "Pharmacist," +
-                            pharmacist.getLicenseNumber() + "\n");
-                } else if (user instanceof Administrator admin) {
-                    writer.write(admin.getId() + "," +
-                            admin.getName() + "," +
-                            "Administrator,\n");
-                }
-            }
-
-            System.out.println("Staff data persisted successfully!");
-        } catch (IOException e) {
-            System.err.println("Error persisting staff data: " + e.getMessage());
-        }
     }
 }
