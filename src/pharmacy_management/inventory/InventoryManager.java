@@ -3,12 +3,10 @@ package pharmacy_management.inventory;
 
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import pharmacy_management.prescriptions.Prescription;
 
 public class InventoryManager {
@@ -17,6 +15,7 @@ public class InventoryManager {
     private final Map<String, Prescription> prescriptions;
     private final IReplenishmentService replenishmentService;
     private final String pharmacistId;
+    private static final String MEDICINE_FILE = "SC2002HMS/data/Medicine_List.csv";
 
     public InventoryManager(IReplenishmentService replenishmentService, String pharmacistId) {
         this.prescriptions = new HashMap<>();
@@ -28,22 +27,19 @@ public class InventoryManager {
         try {
             List<String[]> records = CSVReaderUtil.readCSV(filePath);
             boolean isFirstRow = true;
-
+            sharedInventory.clear();
             for (String[] line : records) {
                 if (isFirstRow) {
                     isFirstRow = false;
                     continue;
                 }
-
                 try {
                     String medicationName = line[0].trim();
                     int initialStock = Integer.parseInt(line[1].trim());
                     int lowStockThreshold = Integer.parseInt(line[2].trim());
                     String expiryDate = line[3].trim();
-
                     addMedication(medicationName, initialStock, expiryDate);
                     sharedLowStockThresholds.put(medicationName, lowStockThreshold);
-
                     System.out.println("Loaded: " + medicationName + " with " + initialStock + " units");
                 } catch (Exception e) {
                     System.err.println("Error loading line: " + String.join(",", line));
@@ -66,36 +62,26 @@ public class InventoryManager {
 
     public void setLowStockThreshold(String medicationName, int newThreshold) {
         try {
-            String filePath = "SC2002HMS/data/Medicine_List.csv";
-            List<String[]> records = CSVReaderUtil.readCSV(filePath);
+            List<String[]> records = CSVReaderUtil.readCSV(MEDICINE_FILE);
             List<String[]> updatedRecords = new ArrayList<>();
-
             boolean medicationFound = false;
-
-            // Update the threshold for the specified medication
             for (String[] record : records) {
                 if (record[0].equalsIgnoreCase(medicationName)) {
-                    record[2] = String.valueOf(newThreshold); // Update the low stock threshold
+                    record[2] = String.valueOf(newThreshold);
                     medicationFound = true;
                 }
-                updatedRecords.add(record); // Add the record to the updated list
+                updatedRecords.add(record);
             }
-
             if (!medicationFound) {
                 System.out.println("Medication not found in the file: " + medicationName);
                 return;
             }
-
-            // Write the updated records back to the file
-            CSVWriterUtil.writeCSV(filePath, writer -> {
+            CSVWriterUtil.writeCSV(MEDICINE_FILE, writer -> {
                 for (String[] record : updatedRecords) {
                     writer.write(String.join(",", record) + "\n");
                 }
             });
-
-            // Update the in-memory threshold map
             sharedLowStockThresholds.put(medicationName, newThreshold);
-
             System.out.println("Low stock threshold updated successfully for " + medicationName);
         } catch (Exception e) {
             System.err.println("Error updating low stock threshold: " + e.getMessage());
@@ -103,20 +89,20 @@ public class InventoryManager {
     }
 
     public void saveMedicineListToCSV() {
-        String MEDICINE_FILE = "SC2002HMS/data/Medicine_List.csv";
         try {
             CSVWriterUtil.writeCSV(MEDICINE_FILE, writer -> {
                 writer.write("Medication Name,Current Stock,Low Stock Threshold,Expiry Date\n");
                 for (Map.Entry<String, Map<String, Integer>> entry : sharedInventory.entrySet()) {
                     String medicationName = entry.getKey();
                     Map<String, Integer> stockByDate = entry.getValue();
-
                     for (Map.Entry<String, Integer> stockEntry : stockByDate.entrySet()) {
-                        writer.write(String.format("%s,%d,%d,%s\n",
-                                medicationName,
-                                stockEntry.getValue(),
-                                sharedLowStockThresholds.getOrDefault(medicationName, 10),
-                                stockEntry.getKey()));
+                        if (stockEntry.getValue() > 0) {
+                            writer.write(String.format("%s,%d,%d,%s\n",
+                                    medicationName,
+                                    stockEntry.getValue(),
+                                    sharedLowStockThresholds.getOrDefault(medicationName, 10),
+                                    stockEntry.getKey()));
+                        }
                     }
                 }
             });
@@ -130,7 +116,6 @@ public class InventoryManager {
             System.out.println("Inventory is empty!");
             return;
         }
-
         for (Map.Entry<String, Map<String, Integer>> entry : sharedInventory.entrySet()) {
             String medicationName = entry.getKey();
             Map<String, Integer> stockByDate = entry.getValue();
@@ -165,7 +150,6 @@ public class InventoryManager {
             System.out.println("Error: Medication not found in inventory.");
             return;
         }
-
         try {
             String requestId = replenishmentService.createRequest(medicationName, quantity, pharmacistId);
             System.out.println("Replenishment request created successfully!");
@@ -182,17 +166,23 @@ public class InventoryManager {
             System.out.println("Medication not available in inventory.");
             return false;
         }
-
         Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
+        boolean dispensed = false;
         for (Map.Entry<String, Integer> entry : stockByDate.entrySet()) {
             String expiryDate = entry.getKey();
             int stock = entry.getValue();
             if (stock >= quantity) {
                 stockByDate.put(expiryDate, stock - quantity);
+                dispensed = true;
                 System.out.println("Dispensed " + quantity + " units of " +
                         medicationName + " (Expiry: " + expiryDate + ")");
-                return true;
+                break;
             }
+        }
+        if (dispensed) {
+            saveMedicineListToCSV();
+            checkLowStock(medicationName);
+            return true;
         }
         System.out.println("Insufficient stock for " + medicationName);
         return false;

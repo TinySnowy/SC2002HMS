@@ -62,12 +62,12 @@ public class AppointmentManagerImpl implements IAppointmentManager {
       System.out.println("Appointment not found.");
       return null;
     }
-
     // Update appointment details
     appointment.setOutcome(serviceType, consultationNotes, prescriptions);
-
-    // Save the updated appointment to CSV
     appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
+
+    // Save prescriptions to CSV
+    appointmentList.savePrescriptionsToCSV("SC2002HMS/data/Prescriptions.csv", prescriptions);
 
     // Create and save appointment outcome
     AppointmentOutcome outcome = new AppointmentOutcome(

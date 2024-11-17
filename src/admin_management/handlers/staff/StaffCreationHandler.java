@@ -41,6 +41,7 @@ public class StaffCreationHandler {
 
             // Create staff member
             User newStaff = createStaffMember(id, name, password, gender, age);
+            System.out.println(newStaff);
             if (newStaff != null) {
                 staffManager.addStaff(newStaff);
                 System.out.println("Staff member added successfully!");
@@ -55,9 +56,9 @@ public class StaffCreationHandler {
 
     private String getUniqueStaffId() {
         System.out.println("Select Role:");
-        System.out.println("1. Doctor (D)");
-        System.out.println("2. Pharmacist (P)");
-        System.out.println("3. Administrator (A)");
+        System.out.println("1. Doctor (1)");
+        System.out.println("2. Pharmacist (2)");
+        System.out.println("3. Administrator (3)");
 
         int roleChoice = validator.getValidatedInput(scanner, "Enter choice (1-3): ", 1, 3);
         String prefix = getRolePrefix(roleChoice);
@@ -66,10 +67,14 @@ public class StaffCreationHandler {
 
     private String getRolePrefix(int roleChoice) {
         switch (roleChoice) {
-            case 1: return "D";
-            case 2: return "P";
-            case 3: return "A";
-            default: throw new IllegalArgumentException("Invalid role choice");
+            case 1:
+                return "D";
+            case 2:
+                return "P";
+            case 3:
+                return "A";
+            default:
+                throw new IllegalArgumentException("Invalid role choice");
         }
     }
 

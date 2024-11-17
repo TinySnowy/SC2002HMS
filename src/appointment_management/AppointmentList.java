@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import pharmacy_management.prescriptions.Prescription;
+
 public class AppointmentList {
     private List<Appointment> appointments;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -151,6 +153,27 @@ public class AppointmentList {
         return appointments.stream()
                 .filter(app -> app.getPatient().getId().equals(patientId))
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public void savePrescriptionsToCSV(String filePath, List<Prescription> prescriptions) {
+        CSVWriterUtil.writeCSV(filePath, writer -> {
+            try {
+                // Write header
+                writer.write("PrescriptionID,MedicationName,Dosage,Quantity,Status\n");
+
+                // Write prescription details
+                for (Prescription prescription : prescriptions) {
+                    writer.write(String.format("%s,%s,%s,%d,%s\n",
+                            prescription.getPrescriptionId(),
+                            escapeCSV(prescription.getMedicationName()),
+                            escapeCSV(prescription.getDosage()),
+                            prescription.getQuantity(),
+                            escapeCSV(prescription.getStatus()))); // Use prescription status if available
+                }
+            } catch (Exception e) {
+                System.err.println("Error saving prescriptions: " + e.getMessage());
+            }
+        });
     }
 
     // Get appointments for a specific doctor

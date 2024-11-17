@@ -242,6 +242,7 @@ public class DoctorDashboard implements AutoCloseable {
     }
 
     private void recordAppointmentOutcome() {
+
         System.out.print("Enter Appointment ID (or 'back' to return): ");
         String appointmentId = scanner.nextLine();
 

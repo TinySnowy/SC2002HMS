@@ -57,8 +57,11 @@ public class RoleSelector {
                     // Create InventoryManager with pharmacist ID
                     InventoryManager pharmacistInventoryManager = new InventoryManager(replenishmentService,
                             pharmacist.getId());
-                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(pharmacist,
-                            pharmacistInventoryManager, replenishmentService);
+                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(
+                            pharmacist,
+                            pharmacistInventoryManager,
+                            replenishmentService,
+                            userController); // Pass UserController here
                     pharmacistDashboard.showDashboard();
                     break;
 

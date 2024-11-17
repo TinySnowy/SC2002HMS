@@ -1,6 +1,8 @@
 package pharmacy_management;
 
 import user_management.Pharmacist;
+import user_management.UserController;
+
 import java.util.Scanner;
 
 import pharmacy_management.appointments.AppointmentOutcome;
@@ -9,22 +11,25 @@ import pharmacy_management.inventory.IReplenishmentService;
 import pharmacy_management.inventory.InventoryManager;
 import pharmacy_management.inventory.ReplenishmentRequest;
 import pharmacy_management.prescriptions.Prescription;
+import pharmacy_management.PrescriptionService;
 
 import java.util.List;
 
 public class PharmacistDashboard {
     private final Pharmacist pharmacist;
     private final InventoryManager inventoryManager;
+    private final PrescriptionService prescriptionService;
     private final AppointmentOutcomeService appointmentOutcomeService;
     private final IReplenishmentService replenishmentService;
     private final Scanner scanner;
 
     public PharmacistDashboard(Pharmacist pharmacist, InventoryManager inventoryManager,
-            IReplenishmentService replenishmentService) {
+            IReplenishmentService replenishmentService, UserController userController) {
         this.pharmacist = pharmacist;
         this.inventoryManager = inventoryManager;
         this.replenishmentService = replenishmentService;
-        this.appointmentOutcomeService = new AppointmentOutcomeService(null);
+        this.prescriptionService = new PrescriptionService(inventoryManager, userController);
+        this.appointmentOutcomeService = new AppointmentOutcomeService(userController);
         this.scanner = new Scanner(System.in);
     }
 
@@ -32,14 +37,14 @@ public class PharmacistDashboard {
         while (true) {
             displayMenu();
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine(); // Consume newline
 
             switch (choice) {
                 case 1:
                     viewInventory();
                     break;
                 case 2:
-                    fulfillPrescription();
+                    viewAndFulfillPrescriptions();
                     break;
                 case 3:
                     requestRefill();
@@ -48,12 +53,9 @@ public class PharmacistDashboard {
                     viewAppointmentOutcomes();
                     break;
                 case 5:
-                    updatePrescriptionStatus();
-                    break;
-                case 6:
                     viewReplenishmentRequests();
                     break;
-                case 7: {
+                case 6: {
                     System.out.println("Logging out of Pharmacist Dashboard...");
                     return;
                 }
@@ -67,12 +69,11 @@ public class PharmacistDashboard {
         System.out.println("\nPharmacist Dashboard - " + pharmacist.getName());
         System.out.println("----------------------------------------");
         System.out.println("1. View Medication Inventory");
-        System.out.println("2. Fulfill Prescription");
+        System.out.println("2. View & Fulfill Prescriptions");
         System.out.println("3. Submit Replenishment Request");
-        System.out.println("4. View Appointment Outcome Record");
-        System.out.println("5. Update Prescription Status");
-        System.out.println("6. View Replenishment Requests");
-        System.out.println("7. Log Out");
+        System.out.println("4. View Appointment Outcomes");
+        System.out.println("5. View Replenishment Requests");
+        System.out.println("6. Log Out");
         System.out.println("----------------------------------------");
         System.out.print("Enter your choice: ");
     }
@@ -82,27 +83,70 @@ public class PharmacistDashboard {
         System.out.println("----------------------------------------");
         inventoryManager.checkInventory();
         inventoryManager.checkAllLowStock();
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
-    private void fulfillPrescription() {
-        System.out.print("Enter Prescription ID to fulfill: ");
-        String prescriptionId = scanner.nextLine();
-        Prescription prescription = inventoryManager.getPrescriptionById(prescriptionId);
+    private void viewAndFulfillPrescriptions() {
+        while (true) {
+            System.out.println("\nPrescription Management");
+            System.out.println("----------------------------------------");
+            System.out.println("1. View Pending Prescriptions");
+            System.out.println("2. Dispense Prescription");
+            System.out.println("3. Return to Main Menu");
+            System.out.print("\nEnter your choice: ");
 
-        if (prescription != null && "Pending".equals(prescription.getStatus())) {
-            if (prescription.fulfill(inventoryManager)) {
-                System.out.println("Prescription fulfilled successfully:");
-                System.out.println(prescription);
-            } else {
-                System.out.println("Unable to fulfill prescription due to insufficient stock.");
-                checkAndSuggestReplenishment(prescription.getMedicationName());
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    prescriptionService.displayPendingPrescriptions();
+                    System.out.println("\nPress Enter to continue...");
+                    scanner.nextLine();
+                    break;
+                case 2:
+                    dispensePrescription();
+                    break;
+                case 3:
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
-        } else {
-            System.out.println("Prescription not found or already fulfilled.");
         }
     }
 
+    private void dispensePrescription() {
+        prescriptionService.displayPendingPrescriptions();
+
+        System.out.print("\nEnter Prescription ID to dispense (or 'cancel' to go back): ");
+        String prescriptionId = scanner.nextLine().trim();
+
+        if (prescriptionId.equalsIgnoreCase("cancel")) {
+            return;
+        }
+
+        if (prescriptionService.dispensePrescription(prescriptionId)) {
+            System.out.println("Prescription successfully dispensed!");
+            System.out.println("Inventory has been automatically updated.");
+        } else {
+            System.out.println("Failed to dispense prescription.");
+            System.out.println("Would you like to submit a replenishment request? (yes/no)");
+            String response = scanner.nextLine().trim().toLowerCase();
+            if (response.equals("yes")) {
+                requestRefill();
+            }
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
     private void requestRefill() {
+        System.out.println("\nSubmit Replenishment Request");
+        System.out.println("----------------------------------------");
+
         System.out.print("Enter Medication Name: ");
         String medicationName = scanner.nextLine();
 
@@ -120,6 +164,9 @@ public class PharmacistDashboard {
         } catch (Exception e) {
             System.out.println("Error submitting replenishment request: " + e.getMessage());
         }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private void viewReplenishmentRequests() {
@@ -127,89 +174,52 @@ public class PharmacistDashboard {
 
         if (requests.isEmpty()) {
             System.out.println("\nNo replenishment requests found.");
-            return;
+        } else {
+            System.out.println("\nYour Replenishment Requests:");
+            System.out.println("----------------------------------------");
+            for (ReplenishmentRequest request : requests) {
+                System.out.println("Request ID: " + request.getRequestId());
+                System.out.println("Medication: " + request.getMedicationName());
+                System.out.println("Quantity: " + request.getQuantity());
+                System.out.println("Status: " + request.getStatus());
+                System.out.println("Date: " + request.getRequestDate());
+                if (request.getAdminNotes() != null && !request.getAdminNotes().isEmpty()) {
+                    System.out.println("Admin Notes: " + request.getAdminNotes());
+                }
+                System.out.println("----------------------------------------");
+            }
         }
 
-        System.out.println("\nYour Replenishment Requests:");
-        System.out.println("----------------------------------------");
-        for (ReplenishmentRequest request : requests) {
-            System.out.println("Request ID: " + request.getRequestId());
-            System.out.println("Medication: " + request.getMedicationName());
-            System.out.println("Quantity: " + request.getQuantity());
-            System.out.println("Status: " + request.getStatus());
-            System.out.println("Date: " + request.getRequestDate());
-            if (request.getAdminNotes() != null && !request.getAdminNotes().isEmpty()) {
-                System.out.println("Admin Notes: " + request.getAdminNotes());
-            }
-            System.out.println("----------------------------------------");
-        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private void viewAppointmentOutcomes() {
         List<AppointmentOutcome> pendingOutcomes = appointmentOutcomeService.getPendingPrescriptionOutcomes();
+
         if (pendingOutcomes.isEmpty()) {
             System.out.println("No pending prescription orders found.");
-            return;
-        }
-
-        System.out.println("\nPending Prescription Orders:");
-        System.out.println("----------------------------------------");
-        for (AppointmentOutcome outcome : pendingOutcomes) {
-            System.out.println("Appointment ID: " + outcome.getAppointmentId());
-            System.out.println("Patient ID: " + outcome.getPatientId());
-            System.out.println("Doctor ID: " + outcome.getDoctorId());
-            System.out.println("Date: " + outcome.getAppointmentDate());
-            System.out.println("Prescriptions:");
-
-            for (Prescription prescription : outcome.getPrescriptions()) {
-                if ("Pending".equals(prescription.getStatus())) {
-                    System.out.println("- " + prescription);
-                }
-            }
+        } else {
+            System.out.println("\nPending Prescription Orders:");
             System.out.println("----------------------------------------");
-        }
-    }
+            for (AppointmentOutcome outcome : pendingOutcomes) {
+                System.out.println("Appointment ID: " + outcome.getAppointmentId());
+                System.out.println("Patient ID: " + outcome.getPatientId());
+                System.out.println("Doctor ID: " + outcome.getDoctorId());
+                System.out.println("Date: " + outcome.getAppointmentDate());
+                System.out.println("Prescriptions:");
 
-    private void updatePrescriptionStatus() {
-        System.out.print("Enter Prescription ID: ");
-        String prescriptionId = scanner.nextLine();
-
-        Prescription prescription = inventoryManager.getPrescriptionById(prescriptionId);
-        if (prescription == null) {
-            System.out.println("Prescription not found.");
-            return;
-        }
-
-        System.out.println("\nCurrent Status: " + prescription.getStatus());
-        System.out.println("1. Mark as Dispensed");
-        System.out.println("2. Mark as Cancelled");
-        System.out.print("Enter choice: ");
-
-        int choice = scanner.nextInt();
-        scanner.nextLine();
-
-        switch (choice) {
-            case 1:
-                if (prescription.fulfill(inventoryManager)) {
-                    System.out.println("Prescription marked as dispensed successfully.");
+                for (Prescription prescription : outcome.getPrescriptions()) {
+                    if ("Pending".equals(prescription.getStatus())) {
+                        System.out.println("- " + prescription);
+                    }
                 }
-                break;
-            case 2:
-                prescription.cancel();
-                System.out.println("Prescription cancelled successfully.");
-                break;
-            default:
-                System.out.println("Invalid choice.");
+                System.out.println("----------------------------------------");
+            }
         }
-    }
 
-    private void checkAndSuggestReplenishment(String medicationName) {
-        System.out.println("\nWould you like to submit a replenishment request for " + medicationName + "? (yes/no)");
-        String response = scanner.nextLine().trim().toLowerCase();
-
-        if (response.equals("yes")) {
-            requestRefill();
-        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private int getValidatedInput(String prompt, int minimum) {
@@ -217,7 +227,7 @@ public class PharmacistDashboard {
             try {
                 System.out.print(prompt);
                 int value = scanner.nextInt();
-                scanner.nextLine();
+                scanner.nextLine(); // Consume newline
 
                 if (value >= minimum) {
                     return value;
@@ -225,7 +235,7 @@ public class PharmacistDashboard {
                 System.out.println("Please enter a number greater than or equal to " + minimum);
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter a valid number.");
-                scanner.nextLine();
+                scanner.nextLine(); // Consume invalid input
             }
         }
     }
