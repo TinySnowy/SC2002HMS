@@ -20,6 +20,30 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
     loadOutcomes();
   }
 
+  private void loadPrescriptionForOutcome(AppointmentOutcome outcome, String patientId) {
+    try {
+      MedicalRecord medRecord = medicalRecordController.getRecordByPatientId(patientId);
+      if (medRecord != null && !medRecord.getPrescription().isEmpty()) {
+        Patient patient = (Patient) userController.getUserById(patientId);
+        if (patient != null) {
+          String[] prescriptionParts = medRecord.getPrescription().split(" ");
+          String medicationName = prescriptionParts[0];
+          String dosage = prescriptionParts.length > 1 ? prescriptionParts[1] : "";
+
+          Prescription prescription = new Prescription(
+              outcome.getAppointmentId() + "_PRESC",
+              patient,
+              medicationName,
+              dosage,
+              2);
+          outcome.addPrescription(prescription);
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Error loading prescription for patient " + patientId + ": " + e.getMessage());
+    }
+  }
+
   private void loadOutcomes() {
     List<String[]> records = CSVReaderUtil.readCSV(APPOINTMENTS_FILE);
     boolean isFirstRow = true;
@@ -31,40 +55,29 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
       }
 
       try {
+        if (record.length < 4) {
+          System.err.println("Invalid record format: insufficient fields");
+          continue;
+        }
+
         String appointmentId = record[0];
         String patientId = record[1];
         String doctorId = record[2];
         LocalDateTime date = LocalDateTime.parse(record[3].replace(" ", "T"));
-        // String status = record[4];
-        String serviceType = record[5];
+
+        // Safely get optional fields
+        String serviceType = record.length > 5 ? record[5] : "";
         String notes = record.length > 6 ? record[6] : "";
 
         AppointmentOutcome outcome = new AppointmentOutcome(
             appointmentId, patientId, doctorId, date, serviceType, notes);
 
         // Load prescription from medical record if it exists
-        MedicalRecord medRecord = medicalRecordController.getRecordByPatientId(patientId);
-        if (medRecord != null && !medRecord.getPrescription().isEmpty()) {
-          Patient patient = (Patient) userController.getUserById(patientId);
-          if (patient != null) {
-            String[] prescriptionParts = medRecord.getPrescription().split(" ");
-            String medicationName = prescriptionParts[0];
-            String dosage = prescriptionParts.length > 1 ? prescriptionParts[1] : "";
-
-            Prescription prescription = new Prescription(
-                appointmentId + "_PRESC", // Generate prescription ID
-                patient,
-                medicationName,
-                dosage,
-                2 // Default quantity, adjust as needed
-            );
-            outcome.addPrescription(prescription);
-          }
-        }
+        loadPrescriptionForOutcome(outcome, patientId);
 
         outcomes.put(appointmentId, outcome);
       } catch (Exception e) {
-        System.err.println("Error loading appointment outcome: " + e.getMessage());
+        System.err.println("Error loading appointment outcome for record: " + String.join(",", record));
       }
     }
   }

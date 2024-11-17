@@ -1,7 +1,7 @@
 PatientID,Name,Diagnosis,Prescription
-P1002,Bob Stone,Diabetes,Metformin 500mg
-P1003,Charlie White,Allergy,Loratadine 10mg
-P1004,Emily Davis,Flu,Oseltamivir 75mg
 P1005,Michael Brown,Back Pain,Ibuprofen 400mg
 P1006,Sarah Wilson,Anxiety,Sertraline 50mg
-P1001,Alice Brown,ED,Ashwiagra
+P1003,Charlie White,Allergy,Loratadine 10mg
+P1004,Emily Davis,Flu,Oseltamivir 75mg
+P1001,Alice Brown,Eye problem,EyeDropd
+P1002,Bob Stone,Diabetes,Metformin 500mg

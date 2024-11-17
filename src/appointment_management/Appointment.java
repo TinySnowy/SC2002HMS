@@ -13,10 +13,10 @@ public class Appointment {
     private Patient patient;
     private Doctor doctor;
     private LocalDateTime appointmentDate;
-    private String status; // Track the appointment status (e.g., Scheduled, Confirmed, Cancelled)
-    private String serviceType; // Type of service provided (for outcome records)
-    private String consultationNotes; // Doctor's consultation notes
-    private List<Prescription> prescriptions; // List of prescriptions for this appointment
+    private String status;
+    private String serviceType;
+    private String consultationNotes;
+    private List<Prescription> prescriptions;
 
     public Appointment(String appointmentId, Patient patient, Doctor doctor, LocalDateTime appointmentDate) {
         this.appointmentId = appointmentId;
@@ -78,7 +78,7 @@ public class Appointment {
         this.serviceType = serviceType;
         this.consultationNotes = consultationNotes;
         this.status = "Completed";
-        this.prescriptions = prescriptions; // Store the list of prescriptions with the appointment outcome
+        this.prescriptions = new ArrayList<>(prescriptions); // Create a new list to avoid reference issues
     }
 
     // Method to add a prescription to the appointment
@@ -93,7 +93,8 @@ public class Appointment {
             System.out.println("Consultation Notes: " + consultationNotes);
             System.out.println("Prescriptions:");
             for (Prescription prescription : prescriptions) {
-                System.out.println("  - " + prescription.getMedicationName() + " (Status: " + prescription.getStatus() + ")");
+                System.out.println(
+                        "  - " + prescription.getMedicationName() + " (Status: " + prescription.getStatus() + ")");
             }
         } else {
             System.out.println("No outcome recorded for this appointment.");

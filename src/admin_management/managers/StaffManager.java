@@ -1,4 +1,4 @@
-package admin_management;
+package admin_management.managers;
 
 import user_management.*;
 import java.util.*;

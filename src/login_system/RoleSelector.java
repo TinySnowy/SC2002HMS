@@ -1,45 +1,77 @@
 package login_system;
 
 import doctor_management.DoctorDashboard;
-import appointment_management.AppointmentList;
+import admin_management.AdminDashboard;
 import patient_management.PatientDashboard;
-import pharmacy_management.InventoryManager;
-import pharmacy_management.PharmacistDashboard;
-import user_management.Doctor;
-import user_management.Patient;
-import user_management.Pharmacist;
-import user_management.User;
+import pharmacy_management.*;
+import user_management.*;
+import appointment_management.AppointmentList;
 
 public class RoleSelector {
-    private AppointmentList appointmentList; // Shared appointment list
-    private InventoryManager inventoryManager; // Inventory manager for pharmacist dashboard
+    private final UserController userController;
+    private final AppointmentList appointmentList;
+    private final IReplenishmentService replenishmentService;
 
-    public RoleSelector(AppointmentList appointmentList, InventoryManager inventoryManager) {
+    public RoleSelector(UserController userController,
+            AppointmentList appointmentList,
+            IReplenishmentService replenishmentService) {
+        this.userController = userController;
         this.appointmentList = appointmentList;
-        this.inventoryManager = inventoryManager;
+        this.replenishmentService = replenishmentService;
     }
 
     public void navigateToRoleDashboard(User user) {
-        switch (user.getRole()) {
-            case "Doctor": {
-                System.out.println("Navigating to Doctor Dashboard...");
-                DoctorDashboard doctorDashboard = new DoctorDashboard((Doctor) user, appointmentList);
-                doctorDashboard.showDashboard();
+        try {
+            System.out.println("\nWelcome, " + user.getName() + "!");
+            System.out.println("Role: " + user.getRole());
+            System.out.println("----------------------------------------");
+
+            switch (user.getRole()) {
+                case "Administrator":
+                    InventoryManager adminInventoryManager = new InventoryManager(replenishmentService, user.getId());
+                    AdminDashboard adminDashboard = new AdminDashboard(
+                            userController,
+                            adminInventoryManager,
+                            replenishmentService,
+                            appointmentList);
+                    adminDashboard.showDashboard();
+                    break;
+
+                case "Doctor":
+                    System.out.println("Navigating to Doctor Dashboard...");
+                    IAppointmentOutcomeService outcomeService = new AppointmentOutcomeService(userController);
+                    DoctorDashboard doctorDashboard = new DoctorDashboard(
+                            (Doctor) user,
+                            appointmentList,
+                            outcomeService);
+                    doctorDashboard.showDashboard();
+                    break;
+
+                case "Pharmacist":
+                    System.out.println("Navigating to Pharmacist Dashboard...");
+                    Pharmacist pharmacist = (Pharmacist) user;
+                    // Create InventoryManager with pharmacist ID
+                    InventoryManager pharmacistInventoryManager = new InventoryManager(replenishmentService,
+                            pharmacist.getId());
+                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(pharmacist,
+                            pharmacistInventoryManager, replenishmentService);
+                    pharmacistDashboard.showDashboard();
+                    break;
+
+                case "Patient":
+                    System.out.println("Navigating to Patient Dashboard...");
+                    PatientDashboard patientDashboard = new PatientDashboard(
+                            (Patient) user,
+                            appointmentList);
+                    patientDashboard.showDashboard();
+                    break;
+
+                default:
+                    System.out.println("Unknown role. Unable to navigate.");
             }
-            case "Patient": {
-                System.out.println("Navigating to Patient Dashboard...");
-                PatientDashboard patientDashboard = new PatientDashboard((Patient) user, appointmentList);
-                patientDashboard.showDashboard();
-            }
-            case "Pharmacist": {
-                System.out.println("Navigating to Pharmacist Dashboard...");
-                PharmacistDashboard pharmacistDashboard = new PharmacistDashboard((Pharmacist) user, inventoryManager);
-                pharmacistDashboard.showDashboard();
-            }
-            case "Administrator":
-                System.out.println("Navigating to Admin Dashboard...");
-            default:
-                System.out.println("Unknown role. Unable to navigate.");
+        } catch (Exception e) {
+            System.err.println("Error during navigation: " + e.getMessage());
+            System.out.println("Returning to login...");
         }
     }
 }

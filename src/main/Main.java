@@ -1,12 +1,11 @@
 package main;
 
 import user_management.*;
-import admin_management.*;
-import doctor_management.*;
+
 import pharmacy_management.*;
-import patient_management.*;
+
 import appointment_management.*;
-import login_system.LoginPage;
+import login_system.*;
 
 public class Main {
     private static final String APPOINTMENT_FILE = "SC2002HMS/data/Appointments.csv";
@@ -14,19 +13,22 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            // Initialize core services
             UserController userController = new UserController();
             AppointmentList appointmentList = new AppointmentList();
             IInventoryService inventoryService = new InventoryService();
             IReplenishmentService replenishmentService = new ReplenishmentService(inventoryService);
 
-            // Create temporary InventoryManager for initialization
+            // Create components for initialization
             InventoryManager tempInventoryManager = new InventoryManager(replenishmentService, "SYSTEM");
-            MedicalRecordController medicalRecordController = new MedicalRecordController();
             LoginPage loginPage = new LoginPage(userController);
+            RoleSelector roleSelector = new RoleSelector(userController, appointmentList, replenishmentService);
 
+            // Initialize system
             initializeSystem(userController, appointmentList, tempInventoryManager);
-            runApplicationLoop(loginPage, userController, appointmentList, replenishmentService,
-                    medicalRecordController);
+
+            // Run main application loop
+            runApplicationLoop(loginPage, roleSelector);
 
         } catch (Exception e) {
             System.err.println("Fatal error: " + e.getMessage());
@@ -34,7 +36,8 @@ public class Main {
         }
     }
 
-    private static void initializeSystem(UserController userController, AppointmentList appointmentList,
+    private static void initializeSystem(UserController userController,
+            AppointmentList appointmentList,
             InventoryManager inventoryManager) {
         System.out.println("Initializing Hospital Management System...");
         try {
@@ -48,9 +51,7 @@ public class Main {
         }
     }
 
-    private static void runApplicationLoop(LoginPage loginPage, UserController userController,
-            AppointmentList appointmentList, IReplenishmentService replenishmentService,
-            MedicalRecordController medicalRecordController) {
+    private static void runApplicationLoop(LoginPage loginPage, RoleSelector roleSelector) {
         System.out.println("\nWelcome to the Hospital Management System!");
 
         while (true) {
@@ -60,57 +61,11 @@ public class Main {
                     System.out.println("Exiting system. Goodbye!");
                     break;
                 }
-                handleUserSession(user, appointmentList, replenishmentService,
-                        medicalRecordController, userController);
+                roleSelector.navigateToRoleDashboard(user);
             } catch (Exception e) {
                 System.err.println("Error during session: " + e.getMessage());
                 System.out.println("Returning to login...");
             }
-        }
-    }
-
-    private static void handleUserSession(User user, AppointmentList appointmentList,
-            IReplenishmentService replenishmentService, MedicalRecordController medicalRecordController,
-            UserController userController) {
-        System.out.println("\nWelcome, " + user.getName() + "!");
-        System.out.println("Role: " + user.getRole());
-        System.out.println("----------------------------------------");
-
-        try {
-            switch (user.getRole()) {
-                case "Administrator":
-                    // Create InventoryManager with admin ID
-                    InventoryManager adminInventoryManager = new InventoryManager(replenishmentService, user.getId());
-                    AdminDashboard adminDashboard = new AdminDashboard(userController, adminInventoryManager,
-                            replenishmentService, appointmentList);
-                    adminDashboard.showDashboard();
-                    break;
-                case "Doctor":
-                    DoctorDashboard doctorDashboard = new DoctorDashboard((Doctor) user, appointmentList);
-                    doctorDashboard.showDashboard();
-                    break;
-                case "Pharmacist":
-                    Pharmacist pharmacist = (Pharmacist) user;
-                    // Create InventoryManager with pharmacist ID
-                    InventoryManager pharmacistInventoryManager = new InventoryManager(replenishmentService,
-                            pharmacist.getId());
-                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(pharmacist,
-                            pharmacistInventoryManager, replenishmentService);
-                    pharmacistDashboard.showDashboard();
-                    break;
-                case "Patient":
-                    PatientDashboard patientDashboard = new PatientDashboard((Patient) user, appointmentList);
-                    patientDashboard.showDashboard();
-                    break;
-                default:
-                    System.out.println("Invalid role detected. Logging out...");
-            }
-        } catch (Exception e) {
-            System.err.println("Error in user session: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            System.out.println("----------------------------------------");
-            System.out.println("Session ended. Logging out...");
         }
     }
 }

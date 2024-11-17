@@ -106,28 +106,44 @@ public class AppointmentList {
         addAppointment(appointment);
     }
 
-    // Save appointments to CSV
     public void saveAppointmentsToCSV(String filePath) {
         CSVWriterUtil.writeCSV(filePath, writer -> {
             try {
                 // Write header
                 writer.write("AppointmentID,PatientID,DoctorID,Date,Status,ServiceType,ConsultationNotes\n");
 
-                // Write appointment data
+                // Write appointment data with proper escaping for CSV
                 for (Appointment appointment : appointments) {
+                    String serviceType = appointment.getServiceType() != null ? escapeCSV(appointment.getServiceType())
+                            : "";
+                    String notes = appointment.getConsultationNotes() != null
+                            ? escapeCSV(appointment.getConsultationNotes())
+                            : "";
+
                     writer.write(String.format("%s,%s,%s,%s,%s,%s,%s\n",
                             appointment.getAppointmentId(),
                             appointment.getPatient().getId(),
                             appointment.getDoctor().getId(),
                             appointment.getAppointmentDate().format(DATE_FORMATTER),
                             appointment.getStatus(),
-                            appointment.getServiceType() != null ? appointment.getServiceType() : "",
-                            appointment.getConsultationNotes() != null ? appointment.getConsultationNotes() : ""));
+                            serviceType,
+                            notes));
                 }
             } catch (Exception e) {
                 System.err.println("Error saving appointments: " + e.getMessage());
             }
         });
+    }
+
+    private String escapeCSV(String value) {
+        if (value == null)
+            return "";
+        // Escape special characters and wrap in quotes if needed
+        value = value.replace("\"", "\"\"");
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            value = "\"" + value + "\"";
+        }
+        return value;
     }
 
     // Get appointments for a specific patient
