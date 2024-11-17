@@ -23,7 +23,7 @@ public class AppointmentManagerImpl implements IAppointmentManager {
   public List<Appointment> viewPendingAppointments(String doctorId) {
     return appointmentList.getAllAppointments().stream()
         .filter(a -> a.getDoctor().getId().equals(doctorId) &&
-            "Pending".equals(a.getStatus()))
+            "Confirmed".equals(a.getStatus()))
         .collect(Collectors.toList());
   }
 
