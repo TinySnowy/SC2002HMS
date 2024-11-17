@@ -2,8 +2,9 @@ package user_management;
 
 public class Administrator extends User {
 
-    public Administrator(String id, String name, String rawPassword, boolean isFirstLogin) {
-        super(id, name, "Administrator", rawPassword, isFirstLogin);
+    public Administrator(String id, String name, String rawPassword,
+            String gender, int age, boolean isFirstLogin) {
+        super(id, name, "Administrator", rawPassword, gender, age, isFirstLogin);
     }
 
     public void displayMenu() {

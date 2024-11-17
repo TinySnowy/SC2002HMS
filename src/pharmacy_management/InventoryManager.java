@@ -2,6 +2,9 @@
 package pharmacy_management;
 
 import utils.CSVReaderUtil;
+import utils.CSVWriterUtil;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +59,68 @@ public class InventoryManager {
         Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
         stockByDate.put(expiryDate, stockByDate.getOrDefault(expiryDate, 0) + quantity);
         checkLowStock(medicationName);
+        saveMedicineListToCSV();
+    }
+
+    public void setLowStockThreshold(String medicationName, int newThreshold) {
+        try {
+            String filePath = "SC2002HMS/data/Medicine_List.csv";
+            List<String[]> records = CSVReaderUtil.readCSV(filePath);
+            List<String[]> updatedRecords = new ArrayList<>();
+
+            boolean medicationFound = false;
+
+            // Update the threshold for the specified medication
+            for (String[] record : records) {
+                if (record[0].equalsIgnoreCase(medicationName)) {
+                    record[2] = String.valueOf(newThreshold); // Update the low stock threshold
+                    medicationFound = true;
+                }
+                updatedRecords.add(record); // Add the record to the updated list
+            }
+
+            if (!medicationFound) {
+                System.out.println("Medication not found in the file: " + medicationName);
+                return;
+            }
+
+            // Write the updated records back to the file
+            CSVWriterUtil.writeCSV(filePath, writer -> {
+                for (String[] record : updatedRecords) {
+                    writer.write(String.join(",", record) + "\n");
+                }
+            });
+
+            // Update the in-memory threshold map
+            sharedLowStockThresholds.put(medicationName, newThreshold);
+
+            System.out.println("Low stock threshold updated successfully for " + medicationName);
+        } catch (Exception e) {
+            System.err.println("Error updating low stock threshold: " + e.getMessage());
+        }
+    }
+
+    public void saveMedicineListToCSV() {
+        String MEDICINE_FILE = "SC2002HMS/data/Medicine_List.csv";
+        try {
+            CSVWriterUtil.writeCSV(MEDICINE_FILE, writer -> {
+                writer.write("Medication Name,Current Stock,Low Stock Threshold,Expiry Date\n");
+                for (Map.Entry<String, Map<String, Integer>> entry : sharedInventory.entrySet()) {
+                    String medicationName = entry.getKey();
+                    Map<String, Integer> stockByDate = entry.getValue();
+
+                    for (Map.Entry<String, Integer> stockEntry : stockByDate.entrySet()) {
+                        writer.write(String.format("%s,%d,%d,%s\n",
+                                medicationName,
+                                stockEntry.getValue(),
+                                sharedLowStockThresholds.getOrDefault(medicationName, 10),
+                                stockEntry.getKey()));
+                    }
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Error saving medicine list: " + e.getMessage());
+        }
     }
 
     public void checkInventory() {
@@ -143,3 +208,5 @@ public class InventoryManager {
         prescriptions.put(prescription.getPrescriptionId(), prescription);
     }
 }
+
+// add implementation for setLowStockThreshold

@@ -1,7 +1,7 @@
-ID,Name,Contact Info,Email
-P005,Sarah Wilson,1122334455,sarah.wilson@example.com
-P004,Michael Brown,9873216540,michael.brown@example.com
-P003,Emily Davis,5432167890,emily.davis@example.com
-P1003,Charlie White,1990-07-08,Male
-P1001,Alice Brown,1980-05-14,Female
-P1002,Bob Stone,1975-11-22,Male
+ID,Name,Contact Info,Email,PasswordHash,FirstLogin
+P005,Sarah Wilson,1122334455,sarah.wilson@example.com,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true
+P004,Michael Brown,9873216540,michael.brown@example.com,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true
+P003,Emily Davis,5432167890,emily.davis@example.com,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true
+P1003,Charlie White,1990-07-08,Male,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true
+P1001,Alice Brown,1980-05-14,Female,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true
+P1002,Bob Stone,1975-11-22,Male,d9d13d60f4ec495cc3978c8fea9817d8332ca328b4e240676cfdc156648cdc89,true

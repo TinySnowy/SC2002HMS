@@ -3,8 +3,9 @@ package user_management;
 public class Pharmacist extends User {
     private String licenseNumber;
 
-    public Pharmacist(String id, String name, String rawPassword, String licenseNumber, boolean isFirstLogin) {
-        super(id, name, "Pharmacist", rawPassword, isFirstLogin);
+    public Pharmacist(String id, String name, String rawPassword, String licenseNumber,
+            String gender, int age, boolean isFirstLogin) {
+        super(id, name, "Pharmacist", rawPassword, gender, age, isFirstLogin);
         this.licenseNumber = licenseNumber;
     }
 

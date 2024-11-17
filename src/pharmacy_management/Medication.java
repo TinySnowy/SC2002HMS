@@ -5,7 +5,7 @@ import java.time.LocalDate;
 public class Medication {
   private final String name;
   private int stockLevel;
-  private final int lowStockThreshold;
+  private int lowStockThreshold;
   private final LocalDate expiryDate;
 
   public Medication(String name, int stockLevel, int lowStockThreshold, LocalDate expiryDate) {
@@ -25,6 +25,10 @@ public class Medication {
 
   public int getLowStockThreshold() {
     return lowStockThreshold;
+  }
+
+  public void setLowStockThreshold(int lowStockThreshold) {
+    this.lowStockThreshold = lowStockThreshold;
   }
 
   public LocalDate getExpiryDate() {

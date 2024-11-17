@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import user_management.Patient;
 import utils.CSVReaderUtil;
-import utils.CSVWriterUtil;
 import user_management.UserController;
 import patient_management.MedicalRecordController;
 import patient_management.MedicalRecord;
@@ -36,7 +35,7 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
         String patientId = record[1];
         String doctorId = record[2];
         LocalDateTime date = LocalDateTime.parse(record[3].replace(" ", "T"));
-        String status = record[4];
+        // String status = record[4];
         String serviceType = record[5];
         String notes = record.length > 6 ? record[6] : "";
 

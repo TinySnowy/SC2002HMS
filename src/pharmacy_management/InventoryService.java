@@ -48,13 +48,28 @@ public class InventoryService implements IInventoryService {
 
   @Override
   public boolean updateStock(String medicationName, int quantity) {
-    Medication medication = medications.get(medicationName);
-    if (medication == null)
-      return false;
+    try {
+      // First check if medication exists, if not create it
+      Medication medication = medications.get(medicationName);
+      if (medication == null) {
+        // Create new medication with default threshold
+        medication = new Medication(
+            medicationName,
+            quantity,
+            10, // default threshold
+            LocalDate.now().plusYears(1) // default expiry 1 year from now
+        );
+        medications.put(medicationName, medication);
+      } else {
+        medication.updateStock(quantity);
+      }
 
-    medication.updateStock(quantity);
-    saveInventory();
-    return true;
+      saveInventory(); // Save changes to CSV
+      return true;
+    } catch (Exception e) {
+      System.err.println("Error updating stock: " + e.getMessage());
+      return false;
+    }
   }
 
   @Override

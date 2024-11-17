@@ -1,153 +1,110 @@
 package admin_management;
 
 import user_management.*;
-import utils.CSVReaderUtil;
-import utils.CSVWriterUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class StaffManager {
-    private final List<User> staff;
     private final UserController userController;
-    private static final String STAFF_FILE_PATH = "SC2002HMS/data/Staff_List.csv";
 
     public StaffManager(UserController userController) {
-        this.staff = new ArrayList<>();
         this.userController = userController;
-        loadStaffFromCSV();
     }
 
-    private void loadStaffFromCSV() {
-        List<String[]> records = CSVReaderUtil.readCSV(STAFF_FILE_PATH);
-        boolean isFirstRow = true; // Skip the header row
-
-        for (String[] record : records) {
-            if (isFirstRow) {
-                isFirstRow = false;
-                continue;
-            }
-
-            try {
-                if (record.length < 5) {
-                    System.err.println("Skipping malformed row in Staff_List.csv: " + String.join(",", record));
-                    continue;
-                }
-
-                String id = record[0];
-                String name = record[1];
-                String role = record[2];
-                String rawPassword = record[3];
-                boolean isFirstLogin = Boolean.parseBoolean(record[4]);
-
-                User user = createStaffMember(id, name, role, rawPassword, isFirstLogin);
-                if (user != null) {
-                    addStaff(user);
-                }
-            } catch (Exception e) {
-                System.err.println("Error parsing staff row: " + e.getMessage());
-            }
-        }
+    public List<User> getStaffByRole(String role) {
+        return userController.getUsersByRole(role);
     }
 
-    private User createStaffMember(String id, String name, String role, String rawPassword, boolean isFirstLogin) {
-        switch (role) {
-            case "Doctor":
-                return new Doctor(id, name, rawPassword, "General Medicine", isFirstLogin);
-            case "Pharmacist":
-                return new Pharmacist(id, name, rawPassword, "License not set", isFirstLogin);
-            case "Administrator":
-                return new Administrator(id, name, rawPassword, isFirstLogin);
-            default:
-                System.err.println("Invalid role in staff CSV: " + role + ". Skipping entry.");
-                return null;
-        }
+    public List<User> getAllStaff() {
+        return userController.getAllUsers().stream()
+                .filter(user -> !(user instanceof Patient))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public void addStaff(User user) {
-        if (!(user instanceof Patient)) { // Ensure we don't add patients as staff
-            staff.add(user);
-            userController.addUser(user); // Add to the main user database
-            System.out.println("Staff member added: " + user.getId() + ", Role: " + user.getRole());
-            saveStaffToCSV();
+        if (user instanceof Patient) {
+            throw new IllegalArgumentException("Cannot add patients as staff members");
         }
+        userController.addUser(user);
+        userController.persistAllData(); // Persist after adding
+        System.out.println("Staff member added successfully.");
     }
 
     public void removeStaff(String userId) {
-        boolean removed = staff.removeIf(user -> user.getId().equals(userId));
-        if (removed) {
-            System.out.println("Staff member removed: " + userId);
-            saveStaffToCSV();
-        } else {
-            System.out.println("Staff member not found: " + userId);
+        User user = userController.getUserById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("Staff member not found: " + userId);
         }
+        if (user instanceof Patient) {
+            throw new IllegalArgumentException("Cannot remove patients from staff management");
+        }
+        userController.removeUser(userId);
+        userController.persistAllData(); // Persist after removing
+        System.out.println("Staff member removed successfully.");
     }
 
-    public void listAllStaff() {
-        if (staff.isEmpty()) {
-            System.out.println("No staff members found.");
-            return;
+    public void updateStaff(String staffId, User updatedUser) {
+        if (!staffId.equals(updatedUser.getId())) {
+            throw new IllegalArgumentException("Staff ID cannot be changed");
         }
-
-        System.out.println("\nCurrent Staff Members:");
-        System.out.println("----------------------------------------");
-        System.out.printf("%-10s %-20s %-15s%n", "ID", "Name", "Role");
-        System.out.println("----------------------------------------");
-
-        staff.forEach(user -> System.out.printf("%-10s %-20s %-15s%n",
-                user.getId(),
-                user.getName(),
-                user.getRole()));
-        System.out.println("----------------------------------------");
+        if (updatedUser instanceof Patient) {
+            throw new IllegalArgumentException("Cannot update to patient type");
+        }
+        userController.updateUser(updatedUser);
+        userController.persistAllData(); // Persist after updating
+        System.out.println("Staff member updated successfully.");
     }
 
-    public void filterStaff(String criteria) {
-        Scanner scanner = new Scanner(System.in);
-        List<User> filteredStaff;
-
-        switch (criteria.toLowerCase()) {
-            case "role":
-                System.out.print("Enter role to filter by (Doctor, Pharmacist, Administrator): ");
-                String role = scanner.nextLine();
-                filteredStaff = staff.stream()
-                        .filter(user -> user.getRole().equalsIgnoreCase(role))
-                        .collect(Collectors.toList());
-
-                if (filteredStaff.isEmpty()) {
-                    System.out.println("No staff members found with role: " + role);
-                    return;
-                }
-
-                System.out.println("\nFiltered Staff Members (Role: " + role + ")");
-                System.out.println("----------------------------------------");
-                System.out.printf("%-10s %-20s %-15s%n", "ID", "Name", "Role");
-                System.out.println("----------------------------------------");
-
-                filteredStaff.forEach(user -> System.out.printf("%-10s %-20s %-15s%n",
-                        user.getId(),
-                        user.getName(),
-                        user.getRole()));
-                System.out.println("----------------------------------------");
+    // Helper method to create new staff with auto-generated ID
+    public User createStaffWithId(String name, String role, String password, String specialtyOrLicense, String gender,
+            int age) {
+        String prefix;
+        switch (role.toLowerCase()) {
+            case "doctor":
+                prefix = "D";
                 break;
-
+            case "pharmacist":
+                prefix = "P";
+                break;
+            case "administrator":
+                prefix = "A";
+                break;
             default:
-                System.out.println("Invalid criteria. Please enter 'role'.");
+                throw new IllegalArgumentException("Invalid role: " + role);
         }
+
+        // Get the next available ID
+        int maxId = 0;
+        List<User> existingStaff = getAllStaff();
+        for (User staff : existingStaff) {
+            String id = staff.getId();
+            if (id.startsWith(prefix)) {
+                try {
+                    int num = Integer.parseInt(id.substring(1));
+                    maxId = Math.max(maxId, num);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        String newId = String.format("%s%03d", prefix, maxId + 1);
+        User newStaff = userController.createNewStaff(newId, name, role, password, specialtyOrLicense, gender, age);
+        addStaff(newStaff); // This will also persist the data
+        return newStaff;
     }
 
-    private void saveStaffToCSV() {
-        CSVWriterUtil.writeCSV(STAFF_FILE_PATH, writer -> {
-            writer.write("ID,Name,Role,PasswordHash,FirstLogin\n");
-            for (User user : staff) {
-                writer.write(String.format("%s,%s,%s,%s,%b\n",
-                        user.getId(),
-                        user.getName(),
-                        user.getRole(),
-                        user.getPasswordHash(),
-                        user.isFirstLogin()));
-            }
-        });
+    // Validate staff data
+    public void validateStaffData(String name, String gender, int age, String specialtyOrLicense) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty");
+        }
+        if (gender == null || (!gender.equalsIgnoreCase("M") && !gender.equalsIgnoreCase("F"))) {
+            throw new IllegalArgumentException("Gender must be M or F");
+        }
+        if (age < 18 || age > 100) {
+            throw new IllegalArgumentException("Age must be between 18 and 100");
+        }
+        if (specialtyOrLicense != null && specialtyOrLicense.trim().isEmpty()) {
+            throw new IllegalArgumentException("Specialty/License cannot be empty when required");
+        }
     }
 }

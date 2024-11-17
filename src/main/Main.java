@@ -7,14 +7,12 @@ import pharmacy_management.*;
 import patient_management.*;
 import appointment_management.*;
 import login_system.LoginPage;
-import java.util.Scanner;
 
 public class Main {
     private static final String APPOINTMENT_FILE = "SC2002HMS/data/Appointments.csv";
     private static final String MEDICINE_FILE = "SC2002HMS/data/Medicine_List.csv";
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
         try {
             UserController userController = new UserController();
             AppointmentList appointmentList = new AppointmentList();
@@ -84,8 +82,8 @@ public class Main {
                     // Create InventoryManager with admin ID
                     InventoryManager adminInventoryManager = new InventoryManager(replenishmentService, user.getId());
                     AdminDashboard adminDashboard = new AdminDashboard(userController, adminInventoryManager,
-                            appointmentList);
-                    adminDashboard.showMenu();
+                            replenishmentService, appointmentList);
+                    adminDashboard.showDashboard();
                     break;
                 case "Doctor":
                     DoctorDashboard doctorDashboard = new DoctorDashboard((Doctor) user, appointmentList);

@@ -4,8 +4,9 @@ public class Patient extends User {
     private String contactInfo;
     private String email;
 
-    public Patient(String id, String name, String rawPassword, String contactInfo, String email, boolean isFirstLogin) {
-        super(id, name, "Patient", rawPassword, isFirstLogin);
+    public Patient(String id, String name, String rawPassword,
+            String contactInfo, String email, boolean isFirstLogin) {
+        super(id, name, "Patient", rawPassword, "Unknown", 0, isFirstLogin);
         this.contactInfo = contactInfo;
         this.email = email;
     }

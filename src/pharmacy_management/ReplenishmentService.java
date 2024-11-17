@@ -1,7 +1,7 @@
 package pharmacy_management;
 
+//import java.time.LocalDate;
 import java.util.*;
-import java.time.LocalDateTime;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
 
@@ -54,6 +54,12 @@ public class ReplenishmentService implements IReplenishmentService {
     return requestId;
   }
 
+  public List<ReplenishmentRequest> getPendingRequests() {
+    return requests.values().stream()
+        .filter(r -> r.getStatus() == ReplenishmentStatus.PENDING)
+        .collect(java.util.stream.Collectors.toList());
+  }
+
   @Override
   public List<ReplenishmentRequest> getRequestsByPharmacist(String pharmacistId) {
     return requests.values().stream()
@@ -64,12 +70,21 @@ public class ReplenishmentService implements IReplenishmentService {
   @Override
   public boolean updateRequestStatus(String requestId, ReplenishmentStatus status, String notes) {
     ReplenishmentRequest request = requests.get(requestId);
-    if (request == null)
+    if (request == null) {
       return false;
+    }
 
     request.updateStatus(status, notes);
+
     if (status == ReplenishmentStatus.APPROVED) {
-      inventoryService.updateStock(request.getMedicationName(), request.getQuantity());
+
+      // String expiryDate = LocalDate.now().plusYears(1).toString();
+
+      if (inventoryService.updateStock(request.getMedicationName(), request.getQuantity())) {
+        saveRequests();
+        return true;
+      }
+      return false;
     }
 
     saveRequests();
