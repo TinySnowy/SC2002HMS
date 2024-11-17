@@ -1,7 +1,7 @@
 package pharmacy_management;
 
 import java.util.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
 
@@ -13,6 +13,36 @@ public class ReplenishmentService implements IReplenishmentService {
   public ReplenishmentService(IInventoryService inventoryService) {
     this.inventoryService = inventoryService;
     loadRequests();
+  }
+
+  private void loadRequests() {
+    List<String[]> csvData = CSVReaderUtil.readCSV(REQUESTS_FILE);
+    boolean isFirstRow = true; // Add this flag
+
+    for (String[] row : csvData) {
+      // Skip the header row
+      if (isFirstRow) {
+        isFirstRow = false;
+        continue;
+      }
+
+      try {
+        if (row.length >= 6) {
+          String requestId = row[0];
+          String medicationName = row[1];
+          int quantity = Integer.parseInt(row[2]);
+          String pharmacistId = row[3];
+          ReplenishmentStatus status = ReplenishmentStatus.valueOf(row[4]);
+          String notes = row[5];
+
+          ReplenishmentRequest request = new ReplenishmentRequest(requestId, medicationName, quantity, pharmacistId);
+          request.updateStatus(status, notes);
+          requests.put(requestId, request);
+        }
+      } catch (Exception e) {
+        System.err.println("Error loading request record: " + e.getMessage());
+      }
+    }
   }
 
   @Override
@@ -49,25 +79,6 @@ public class ReplenishmentService implements IReplenishmentService {
   @Override
   public ReplenishmentRequest getRequestById(String requestId) {
     return requests.get(requestId);
-  }
-
-  private void loadRequests() {
-    List<String[]> csvData = CSVReaderUtil.readCSV(REQUESTS_FILE);
-    for (String[] row : csvData) {
-      if (row.length >= 6) { // Ensure correct number of fields
-        String requestId = row[0];
-        String medicationName = row[1];
-        int quantity = Integer.parseInt(row[2]);
-        String pharmacistId = row[3];
-        ReplenishmentStatus status = ReplenishmentStatus.valueOf(row[4]);
-        String notes = row[5]; // Optional notes field
-
-        // Create and store the request
-        ReplenishmentRequest request = new ReplenishmentRequest(requestId, medicationName, quantity, pharmacistId);
-        request.updateStatus(status, notes); // Update status and notes
-        requests.put(requestId, request);
-      }
-    }
   }
 
   private void saveRequests() {

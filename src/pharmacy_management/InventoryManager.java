@@ -1,76 +1,70 @@
+// InventoryManager.java
 package pharmacy_management;
 
 import utils.CSVReaderUtil;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class InventoryManager {
-    private Map<String, Map<String, Integer>> inventory; // {MedicationName: {ExpiryDate: Quantity}}
-    private Map<String, Integer> lowStockThresholds; // {MedicationName: LowStockThreshold}
-    private Map<String, Prescription> prescriptions; // Stores prescriptions by ID
+    private static Map<String, Map<String, Integer>> sharedInventory = new HashMap<>();
+    private static Map<String, Integer> sharedLowStockThresholds = new HashMap<>();
+    private final Map<String, Prescription> prescriptions;
     private final IReplenishmentService replenishmentService;
     private final String pharmacistId;
 
     public InventoryManager(IReplenishmentService replenishmentService, String pharmacistId) {
-        this.inventory = new HashMap<>();
         this.prescriptions = new HashMap<>();
-        this.lowStockThresholds = new HashMap<>();
         this.replenishmentService = replenishmentService;
         this.pharmacistId = pharmacistId;
     }
 
     public void loadInventoryFromCSV(String filePath) {
         try {
-            CSVReaderUtil.readCSV(filePath, (line) -> {
-                if (line[0].equalsIgnoreCase("Medication Name"))
-                    return;
+            List<String[]> records = CSVReaderUtil.readCSV(filePath);
+            boolean isFirstRow = true;
 
-                String medicationName = line[0];
-                int initialStock = Integer.parseInt(line[1]);
-                int lowStockThreshold = Integer.parseInt(line[2]);
-                String expiryDate = line[3];
+            for (String[] line : records) {
+                if (isFirstRow) {
+                    isFirstRow = false;
+                    continue;
+                }
 
-                addMedication(medicationName, initialStock, expiryDate);
-                lowStockThresholds.put(medicationName, lowStockThreshold);
-            });
-            System.out.println("Inventory and low stock thresholds loaded successfully from " + filePath);
+                try {
+                    String medicationName = line[0].trim();
+                    int initialStock = Integer.parseInt(line[1].trim());
+                    int lowStockThreshold = Integer.parseInt(line[2].trim());
+                    String expiryDate = line[3].trim();
+
+                    addMedication(medicationName, initialStock, expiryDate);
+                    sharedLowStockThresholds.put(medicationName, lowStockThreshold);
+
+                    System.out.println("Loaded: " + medicationName + " with " + initialStock + " units");
+                } catch (Exception e) {
+                    System.err.println("Error loading line: " + String.join(",", line));
+                    System.err.println("Error details: " + e.getMessage());
+                }
+            }
         } catch (Exception e) {
             System.err.println("Error loading inventory from CSV: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void addMedication(String medicationName, int quantity, String expiryDate) {
-        inventory.putIfAbsent(medicationName, new HashMap<>());
-        Map<String, Integer> stockByDate = inventory.get(medicationName);
+        sharedInventory.putIfAbsent(medicationName, new HashMap<>());
+        Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
         stockByDate.put(expiryDate, stockByDate.getOrDefault(expiryDate, 0) + quantity);
         checkLowStock(medicationName);
     }
 
-    // Modified to handle replenishment requests
-    public void requestRefill(String medicationName, int quantity, String expiryDate) {
-        if (!inventory.containsKey(medicationName)) {
-            System.out.println("Error: Medication not found in inventory.");
+    public void checkInventory() {
+        if (sharedInventory.isEmpty()) {
+            System.out.println("Inventory is empty!");
             return;
         }
 
-        try {
-            // Create a replenishment request instead of directly adding to inventory
-            String requestId = replenishmentService.createRequest(medicationName, quantity, pharmacistId);
-
-            System.out.println("Replenishment request created successfully!");
-            System.out.println("Request ID: " + requestId);
-            System.out.println("Status: PENDING");
-            System.out.println("Awaiting administrator approval.");
-
-        } catch (Exception e) {
-            System.out.println("Error creating replenishment request: " + e.getMessage());
-        }
-    }
-
-    // Rest of your existing methods remain the same
-    public void checkInventory() {
-        System.out.println("Current Inventory:");
-        for (Map.Entry<String, Map<String, Integer>> entry : inventory.entrySet()) {
+        for (Map.Entry<String, Map<String, Integer>> entry : sharedInventory.entrySet()) {
             String medicationName = entry.getKey();
             Map<String, Integer> stockByDate = entry.getValue();
             System.out.println("Medication: " + medicationName);
@@ -82,72 +76,70 @@ public class InventoryManager {
 
     public void checkAllLowStock() {
         System.out.println("\nLow Stock Alerts:");
-        for (String medicationName : inventory.keySet()) {
+        for (String medicationName : sharedInventory.keySet()) {
             checkLowStock(medicationName);
         }
     }
 
     public void checkLowStock(String medicationName) {
-        Map<String, Integer> stockByDate = inventory.get(medicationName);
-        int totalStock = stockByDate.values().stream().mapToInt(Integer::intValue).sum();
+        Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
+        if (stockByDate != null) {
+            int totalStock = stockByDate.values().stream().mapToInt(Integer::intValue).sum();
+            int threshold = sharedLowStockThresholds.getOrDefault(medicationName, 10);
+            if (totalStock < threshold) {
+                System.out.println("Warning: Low stock for " + medicationName +
+                        ". Total stock: " + totalStock + " units. (Threshold: " + threshold + ")");
+            }
+        }
+    }
 
-        int threshold = lowStockThresholds.getOrDefault(medicationName, 10);
-        if (totalStock < threshold) {
-            System.out.println("Warning: Low stock for " + medicationName + ". Total stock: " + totalStock + " units.");
+    public void requestRefill(String medicationName, int quantity, String expiryDate) {
+        if (!sharedInventory.containsKey(medicationName)) {
+            System.out.println("Error: Medication not found in inventory.");
+            return;
+        }
+
+        try {
+            String requestId = replenishmentService.createRequest(medicationName, quantity, pharmacistId);
+            System.out.println("Replenishment request created successfully!");
+            System.out.println("Request ID: " + requestId);
+            System.out.println("Status: PENDING");
+            System.out.println("Awaiting administrator approval.");
+        } catch (Exception e) {
+            System.out.println("Error creating replenishment request: " + e.getMessage());
         }
     }
 
     public boolean dispenseMedication(String medicationName, int quantity) {
-        if (!inventory.containsKey(medicationName)) {
+        if (!sharedInventory.containsKey(medicationName)) {
             System.out.println("Medication not available in inventory.");
             return false;
         }
 
-        Map<String, Integer> stockByDate = inventory.get(medicationName);
+        Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
         for (Map.Entry<String, Integer> entry : stockByDate.entrySet()) {
             String expiryDate = entry.getKey();
             int stock = entry.getValue();
-
             if (stock >= quantity) {
                 stockByDate.put(expiryDate, stock - quantity);
-                System.out.println(
-                        "Dispensed " + quantity + " units of " + medicationName + " (Expiry: " + expiryDate + ").");
+                System.out.println("Dispensed " + quantity + " units of " +
+                        medicationName + " (Expiry: " + expiryDate + ")");
                 return true;
             }
         }
-        System.out.println("Insufficient stock for " + medicationName + " or stock expired.");
+        System.out.println("Insufficient stock for " + medicationName);
         return false;
-    }
-
-    // Prescription-related methods
-    public void addPrescription(Prescription prescription) {
-        if (prescription.getPatient() == null) {
-            System.err.println("Cannot add prescription with null patient.");
-            return;
-        }
-        prescriptions.put(prescription.getPrescriptionId(), prescription);
-        System.out.println("Added prescription: " + prescription);
     }
 
     public Prescription getPrescriptionById(String prescriptionId) {
         return prescriptions.get(prescriptionId);
     }
 
-    public boolean fulfillPrescription(String prescriptionId) {
-        Prescription prescription = getPrescriptionById(prescriptionId);
-        if (prescription == null) {
-            System.out.println("Prescription not found.");
-            return false;
+    public void addPrescription(Prescription prescription) {
+        if (prescription.getPatient() == null) {
+            System.err.println("Cannot add prescription with null patient.");
+            return;
         }
-
-        boolean dispensed = dispenseMedication(prescription.getMedicationName(), prescription.getQuantity());
-        if (dispensed) {
-            prescription.setStatus("Fulfilled");
-            System.out.println("Prescription fulfilled: " + prescriptionId);
-            return true;
-        } else {
-            System.out.println("Failed to fulfill prescription: " + prescriptionId);
-            return false;
-        }
+        prescriptions.put(prescription.getPrescriptionId(), prescription);
     }
 }
