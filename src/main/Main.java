@@ -7,7 +7,6 @@ import pharmacy_management.*;
 import patient_management.*;
 import appointment_management.*;
 import login_system.LoginPage;
-
 import java.util.Scanner;
 
 public class Main {
@@ -17,18 +16,19 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         try {
-            // Initialize core components
             UserController userController = new UserController();
             AppointmentList appointmentList = new AppointmentList();
-            InventoryManager inventoryManager = new InventoryManager();
+            IInventoryService inventoryService = new InventoryService();
+            IReplenishmentService replenishmentService = new ReplenishmentService(inventoryService);
+
+            // Create temporary InventoryManager for initialization
+            InventoryManager tempInventoryManager = new InventoryManager(replenishmentService, "SYSTEM");
             MedicalRecordController medicalRecordController = new MedicalRecordController();
             LoginPage loginPage = new LoginPage(userController);
 
-            // Initialize system
-            initializeSystem(userController, appointmentList, inventoryManager);
-
-            // Start main application loop
-            runApplicationLoop(loginPage, userController, appointmentList, inventoryManager, medicalRecordController);
+            initializeSystem(userController, appointmentList, tempInventoryManager);
+            runApplicationLoop(loginPage, userController, appointmentList, replenishmentService,
+                    medicalRecordController);
 
         } catch (Exception e) {
             System.err.println("Fatal error: " + e.getMessage());
@@ -36,8 +36,7 @@ public class Main {
         }
     }
 
-    private static void initializeSystem(UserController userController,
-            AppointmentList appointmentList,
+    private static void initializeSystem(UserController userController, AppointmentList appointmentList,
             InventoryManager inventoryManager) {
         System.out.println("Initializing Hospital Management System...");
         try {
@@ -51,10 +50,8 @@ public class Main {
         }
     }
 
-    private static void runApplicationLoop(LoginPage loginPage,
-            UserController userController,
-            AppointmentList appointmentList,
-            InventoryManager inventoryManager,
+    private static void runApplicationLoop(LoginPage loginPage, UserController userController,
+            AppointmentList appointmentList, IReplenishmentService replenishmentService,
             MedicalRecordController medicalRecordController) {
         System.out.println("\nWelcome to the Hospital Management System!");
 
@@ -65,9 +62,8 @@ public class Main {
                     System.out.println("Exiting system. Goodbye!");
                     break;
                 }
-
-                handleUserSession(user, appointmentList, inventoryManager, medicalRecordController, userController);
-
+                handleUserSession(user, appointmentList, replenishmentService,
+                        medicalRecordController, userController);
             } catch (Exception e) {
                 System.err.println("Error during session: " + e.getMessage());
                 System.out.println("Returning to login...");
@@ -75,42 +71,39 @@ public class Main {
         }
     }
 
-    private static void handleUserSession(User user,
-            AppointmentList appointmentList,
-            InventoryManager inventoryManager,
-            MedicalRecordController medicalRecordController,
+    private static void handleUserSession(User user, AppointmentList appointmentList,
+            IReplenishmentService replenishmentService, MedicalRecordController medicalRecordController,
             UserController userController) {
-        try {
-            System.out.println("\nWelcome, " + user.getName() + "!");
-            System.out.println("Role: " + user.getRole());
-            System.out.println("----------------------------------------");
+        System.out.println("\nWelcome, " + user.getName() + "!");
+        System.out.println("Role: " + user.getRole());
+        System.out.println("----------------------------------------");
 
+        try {
             switch (user.getRole()) {
                 case "Administrator":
-                    AdminDashboard adminDashboard = new AdminDashboard(userController, inventoryManager,
+                    // Create InventoryManager with admin ID
+                    InventoryManager adminInventoryManager = new InventoryManager(replenishmentService, user.getId());
+                    AdminDashboard adminDashboard = new AdminDashboard(userController, adminInventoryManager,
                             appointmentList);
                     adminDashboard.showMenu();
                     break;
-
                 case "Doctor":
-                    Doctor doctor = (Doctor) user;
-                    DoctorDashboard doctorDashboard = new DoctorDashboard(doctor, appointmentList);
+                    DoctorDashboard doctorDashboard = new DoctorDashboard((Doctor) user, appointmentList);
                     doctorDashboard.showDashboard();
                     break;
-
                 case "Pharmacist":
                     Pharmacist pharmacist = (Pharmacist) user;
-                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(pharmacist, inventoryManager);
+                    // Create InventoryManager with pharmacist ID
+                    InventoryManager pharmacistInventoryManager = new InventoryManager(replenishmentService,
+                            pharmacist.getId());
+                    PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(pharmacist,
+                            pharmacistInventoryManager, replenishmentService);
                     pharmacistDashboard.showDashboard();
                     break;
-
                 case "Patient":
-                    Patient patient = (Patient) user;
-                    PatientDashboard patientDashboard = new PatientDashboard(patient, appointmentList);
+                    PatientDashboard patientDashboard = new PatientDashboard((Patient) user, appointmentList);
                     patientDashboard.showDashboard();
-
                     break;
-
                 default:
                     System.out.println("Invalid role detected. Logging out...");
             }

@@ -1,5 +1,5 @@
 ID,Name,Role,Specialty/License
-D002,Pediatrics,Doctor,Dr. Bob White
-D001,Orthopedics,Doctor,Dr. Alice Green
+D002,Dr. Bob White,Doctor,Pediatrics
+D001,Dr. Alice Green,Doctor,Orthopedics
 P001,License12345,Pharmacist,Pharmacist Anna Taylor
 P002,License67890,Pharmacist,Pharmacist Ryan Martin
