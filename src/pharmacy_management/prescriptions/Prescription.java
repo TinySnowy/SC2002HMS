@@ -1,5 +1,6 @@
-package pharmacy_management;
+package pharmacy_management.prescriptions;
 
+import pharmacy_management.inventory.InventoryManager;
 import user_management.Patient;
 
 public class Prescription {

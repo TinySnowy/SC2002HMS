@@ -1,4 +1,4 @@
-package pharmacy_management;
+package pharmacy_management.appointments;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -6,6 +6,7 @@ import user_management.Patient;
 import utils.CSVReaderUtil;
 import user_management.UserController;
 import patient_management.MedicalRecordController;
+import pharmacy_management.prescriptions.Prescription;
 import patient_management.MedicalRecord;
 
 public class AppointmentOutcomeService implements IAppointmentOutcomeService {

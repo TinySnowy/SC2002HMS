@@ -1,4 +1,4 @@
-package pharmacy_management;
+package pharmacy_management.inventory;
 
 import java.util.List;
 

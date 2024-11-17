@@ -1,14 +1,14 @@
 package admin_management.menu;
 
 import admin_management.handlers.inventory.*;
-import pharmacy_management.InventoryManager;
-import pharmacy_management.IReplenishmentService;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
 
 public class InventoryManagementMenu extends MenuBase {
     private final InventoryDisplayHandler displayHandler;
     private final ReplenishmentRequestHandler replenishmentHandler;
 
-    public InventoryManagementMenu(InventoryManager inventoryManager, 
+    public InventoryManagementMenu(InventoryManager inventoryManager,
             IReplenishmentService replenishmentService) {
         super();
         this.displayHandler = new InventoryDisplayHandler(inventoryManager);

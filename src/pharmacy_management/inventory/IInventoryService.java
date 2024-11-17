@@ -1,6 +1,8 @@
-package pharmacy_management;
+package pharmacy_management.inventory;
 
 import java.util.List;
+
+import pharmacy_management.Medication;
 
 public interface IInventoryService {
   List<Medication> getAllMedications();

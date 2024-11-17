@@ -1,6 +1,9 @@
-package pharmacy_management;
+package pharmacy_management.inventory;
 
 import java.util.*;
+
+import pharmacy_management.Medication;
+
 import java.time.LocalDate;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;

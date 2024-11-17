@@ -1,8 +1,8 @@
 package admin_management.menu;
 
 import user_management.UserController;
-import pharmacy_management.InventoryManager;
-import pharmacy_management.IReplenishmentService;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
 import appointment_management.AppointmentList;
 
 public class AdminMainMenu extends MenuBase {

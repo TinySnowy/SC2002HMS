@@ -4,6 +4,10 @@ import doctor_management.DoctorDashboard;
 import admin_management.AdminDashboard;
 import patient_management.PatientDashboard;
 import pharmacy_management.*;
+import pharmacy_management.appointments.AppointmentOutcomeService;
+import pharmacy_management.appointments.IAppointmentOutcomeService;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
 import user_management.*;
 import appointment_management.AppointmentList;
 

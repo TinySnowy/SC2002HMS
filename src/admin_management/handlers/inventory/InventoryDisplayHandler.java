@@ -1,6 +1,6 @@
 package admin_management.handlers.inventory;
 
-import pharmacy_management.InventoryManager;
+import pharmacy_management.inventory.InventoryManager;
 
 public class InventoryDisplayHandler {
     private final InventoryManager inventoryManager;

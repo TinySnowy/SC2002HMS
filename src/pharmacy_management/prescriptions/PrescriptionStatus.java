@@ -1,4 +1,4 @@
-package pharmacy_management;
+package pharmacy_management.prescriptions;
 
 public enum PrescriptionStatus {
   PENDING,

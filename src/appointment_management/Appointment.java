@@ -2,11 +2,12 @@ package appointment_management;
 
 import user_management.Patient;
 import user_management.Doctor;
-import pharmacy_management.Prescription;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import pharmacy_management.prescriptions.Prescription;
 
 public class Appointment {
     private String appointmentId;

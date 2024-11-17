@@ -1,5 +1,5 @@
 // InventoryManager.java
-package pharmacy_management;
+package pharmacy_management.inventory;
 
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import pharmacy_management.prescriptions.Prescription;
 
 public class InventoryManager {
     private static Map<String, Map<String, Integer>> sharedInventory = new HashMap<>();
@@ -208,5 +210,3 @@ public class InventoryManager {
         prescriptions.put(prescription.getPrescriptionId(), prescription);
     }
 }
-
-// add implementation for setLowStockThreshold

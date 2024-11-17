@@ -1,7 +1,10 @@
-package pharmacy_management;
+package pharmacy_management.appointments;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import pharmacy_management.prescriptions.Prescription;
+
 import java.util.ArrayList;
 
 public class AppointmentOutcome {

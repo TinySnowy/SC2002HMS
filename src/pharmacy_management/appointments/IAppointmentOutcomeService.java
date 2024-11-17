@@ -1,4 +1,4 @@
-package pharmacy_management;
+package pharmacy_management.appointments;
 
 import java.util.List;
 

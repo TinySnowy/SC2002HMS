@@ -2,8 +2,11 @@ package main;
 
 import user_management.*;
 
-import pharmacy_management.*;
-
+import pharmacy_management.inventory.IInventoryService;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
+import pharmacy_management.inventory.InventoryService;
+import pharmacy_management.inventory.ReplenishmentService;
 import appointment_management.*;
 import login_system.*;
 

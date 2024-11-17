@@ -1,17 +1,22 @@
 package admin_management.handlers.inventory;
+
 import admin_management.utils.InputValidator;
 
-import pharmacy_management.*;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
+import pharmacy_management.inventory.ReplenishmentRequest;
+import pharmacy_management.inventory.ReplenishmentStatus;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
-
 
 public class ReplenishmentRequestHandler {
     private final InventoryManager inventoryManager;
     private final IReplenishmentService replenishmentService;
     private final Scanner scanner;
-    public ReplenishmentRequestHandler(InventoryManager inventoryManager, 
+
+    public ReplenishmentRequestHandler(InventoryManager inventoryManager,
             IReplenishmentService replenishmentService) {
         this.inventoryManager = inventoryManager;
         this.replenishmentService = replenishmentService;
@@ -88,7 +93,7 @@ public class ReplenishmentRequestHandler {
     }
 
     private void processApproval(ReplenishmentRequest request, String notes) {
-        replenishmentService.updateRequestStatus(request.getRequestId(), 
+        replenishmentService.updateRequestStatus(request.getRequestId(),
                 ReplenishmentStatus.APPROVED, notes);
         inventoryManager.addMedication(
                 request.getMedicationName(),

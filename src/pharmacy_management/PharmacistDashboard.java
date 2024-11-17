@@ -2,6 +2,14 @@ package pharmacy_management;
 
 import user_management.Pharmacist;
 import java.util.Scanner;
+
+import pharmacy_management.appointments.AppointmentOutcome;
+import pharmacy_management.appointments.AppointmentOutcomeService;
+import pharmacy_management.inventory.IReplenishmentService;
+import pharmacy_management.inventory.InventoryManager;
+import pharmacy_management.inventory.ReplenishmentRequest;
+import pharmacy_management.prescriptions.Prescription;
+
 import java.util.List;
 
 public class PharmacistDashboard {

@@ -3,7 +3,10 @@ package doctor_management;
 import appointment_management.Appointment;
 import appointment_management.AppointmentList;
 import patient_management.MedicalRecordController;
-import pharmacy_management.*;
+
+import pharmacy_management.appointments.AppointmentOutcome;
+import pharmacy_management.appointments.IAppointmentOutcomeService;
+import pharmacy_management.prescriptions.Prescription;
 import user_management.Doctor;
 import java.time.format.DateTimeFormatter;
 import java.util.*;

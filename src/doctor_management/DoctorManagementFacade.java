@@ -5,7 +5,9 @@ import doctor_management.services.*;
 import appointment_management.AppointmentList;
 import appointment_management.Appointment;
 import patient_management.MedicalRecordController;
-import pharmacy_management.*;
+import pharmacy_management.appointments.AppointmentOutcome;
+import pharmacy_management.appointments.IAppointmentOutcomeService;
+import pharmacy_management.prescriptions.Prescription;
 
 import java.time.LocalDateTime;
 import java.util.List;
