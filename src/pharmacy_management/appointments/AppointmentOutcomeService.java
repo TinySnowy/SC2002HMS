@@ -5,9 +5,9 @@ import java.util.*;
 import user_management.Patient;
 import utils.CSVReaderUtil;
 import user_management.UserController;
-import patient_management.MedicalRecordController;
 import pharmacy_management.prescriptions.Prescription;
-import patient_management.MedicalRecord;
+import patient_management.model.MedicalRecord;
+import patient_management.controllers.MedicalRecordController;
 
 public class AppointmentOutcomeService implements IAppointmentOutcomeService {
   private final Map<String, AppointmentOutcome> outcomes = new HashMap<>();

@@ -2,8 +2,7 @@ package doctor_management;
 
 import appointment_management.Appointment;
 import appointment_management.AppointmentList;
-import patient_management.MedicalRecordController;
-
+import patient_management.controllers.MedicalRecordController;
 import pharmacy_management.appointments.AppointmentOutcome;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.prescriptions.Prescription;

@@ -1,12 +1,15 @@
-package patient_management;
+package patient_management.controllers;
 
+import patient_management.model.MedicalRecord;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
 import java.io.File;
+import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class MedicalRecordController {
     private final Map<String, MedicalRecord> recordsMap;
@@ -39,28 +42,28 @@ public class MedicalRecordController {
             }
             try {
                 if (row.length >= 4) {
-                    String patientId = row[0].trim();
-                    String name = row[1].trim();
-                    String diagnosis = row[2].trim();
-                    String prescription = row[3].trim();
-
-                    // Skip empty records
-                    if (patientId.isEmpty() || name.isEmpty()) {
-                        continue;
-                    }
-
-                    MedicalRecord record = new MedicalRecord(
-                            patientId,
-                            name,
-                            diagnosis,
-                            prescription);
-                    recordsMap.put(patientId, record);
+                    createRecordFromRow(row);
                 }
             } catch (Exception e) {
                 System.err.println("Error loading medical record for patient: " +
                         (row.length > 0 ? row[0] : "unknown") + ": " + e.getMessage());
             }
         }
+    }
+
+    private void createRecordFromRow(String[] row) {
+        String patientId = row[0].trim();
+        String name = row[1].trim();
+        String diagnosis = row[2].trim();
+        String prescription = row[3].trim();
+
+        // Skip empty records
+        if (patientId.isEmpty() || name.isEmpty()) {
+            return;
+        }
+
+        MedicalRecord record = new MedicalRecord(patientId, name, diagnosis, prescription);
+        recordsMap.put(patientId, record);
     }
 
     public MedicalRecord getRecordByPatientId(String patientId) {
@@ -100,29 +103,32 @@ public class MedicalRecordController {
         }
     }
 
-    public void saveRecords() {
+    private void saveRecords() {
         CSVWriterUtil.writeCSV(MEDICAL_RECORD_PATH, writer -> {
             try {
-                // Write header
-                writer.write("PatientID,Name,Diagnosis,Prescription\n");
-
-                // Write records
-                for (MedicalRecord record : recordsMap.values()) {
-                    // Escape any commas in the fields
-                    String diagnosis = escapeCSV(record.getDiagnosis());
-                    String prescription = escapeCSV(record.getPrescription());
-
-                    writer.write(String.format("%s,%s,%s,%s\n",
-                            record.getPatientId(),
-                            record.getPatientName(),
-                            diagnosis,
-                            prescription));
-                }
+                writeRecordsToCSV(writer);
             } catch (Exception e) {
                 System.err.println("Error saving medical records: " + e.getMessage());
                 throw new RuntimeException("Failed to save medical records", e);
             }
         });
+    }
+
+    private void writeRecordsToCSV(BufferedWriter writer) throws Exception {
+        // Write header
+        writer.write("PatientID,Name,Diagnosis,Prescription\n");
+
+        // Write records
+        for (MedicalRecord record : recordsMap.values()) {
+            String diagnosis = escapeCSV(record.getDiagnosis());
+            String prescription = escapeCSV(record.getPrescription());
+
+            writer.write(String.format("%s,%s,%s,%s\n",
+                    record.getPatientId(),
+                    record.getPatientName(),
+                    diagnosis,
+                    prescription));
+        }
     }
 
     private String escapeCSV(String field) {

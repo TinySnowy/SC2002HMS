@@ -1,8 +1,8 @@
 package doctor_management.services;
 
 import doctor_management.interfaces.IMedicalRecordManager;
-import patient_management.MedicalRecordController;
 import patient_management.MedicalRecord;
+import patient_management.controllers.MedicalRecordController;
 
 public class MedicalRecordManagerImpl implements IMedicalRecordManager {
   private final MedicalRecordController recordController;

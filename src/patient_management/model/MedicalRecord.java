@@ -1,8 +1,8 @@
-package patient_management;
+package patient_management.model;
 
 public class MedicalRecord {
-    private String patientId;
-    private String patientName;
+    private final String patientId;
+    private final String patientName;
     private String diagnosis;
     private String prescription;
 
@@ -39,7 +39,6 @@ public class MedicalRecord {
         this.prescription = prescription;
     }
 
-    // Display method for the record
     public void displayRecord() {
         System.out.println("\nMedical Record for " + patientName);
         System.out.println("----------------------------------------");
