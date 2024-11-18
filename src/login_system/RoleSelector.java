@@ -69,7 +69,8 @@ public class RoleSelector {
                     System.out.println("Navigating to Patient Dashboard...");
                     PatientDashboard patientDashboard = new PatientDashboard(
                             (Patient) user,
-                            appointmentList);
+                            appointmentList,
+                            userController);
                     patientDashboard.showDashboard();
                     break;
 
