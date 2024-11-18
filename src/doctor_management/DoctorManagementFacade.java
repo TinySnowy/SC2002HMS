@@ -12,11 +12,13 @@ import doctor_management.services.ScheduleManagerImpl.ScheduleEntry;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DoctorManagementFacade {
     private final IMedicalRecordManager medicalRecordManager;
     private final IAppointmentManager appointmentManager;
     private final IScheduleManager scheduleManager;
+    private final AppointmentList appointmentList;
 
     public DoctorManagementFacade(MedicalRecordController recordController,
             AppointmentList appointmentList,
@@ -24,6 +26,7 @@ public class DoctorManagementFacade {
         this.medicalRecordManager = new MedicalRecordManagerImpl(recordController);
         this.appointmentManager = new AppointmentManagerImpl(appointmentList, outcomeService);
         this.scheduleManager = new ScheduleManagerImpl();
+        this.appointmentList = appointmentList;
     }
 
     // Medical Record Management
@@ -70,6 +73,12 @@ public class DoctorManagementFacade {
 
     public List<AppointmentOutcome> viewCompletedAppointments(String doctorId) {
         return appointmentManager.getCompletedAppointmentOutcomes(doctorId);
+    }
+
+    public List<Appointment> getUpcomingAppointments(String doctorId) {
+        return appointmentList.getAppointmentsByDoctor(doctorId).stream()
+                .filter(apt -> apt.getAppointmentDate().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList());
     }
 
     // Schedule Management with new methods

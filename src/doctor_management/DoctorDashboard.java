@@ -202,12 +202,30 @@ public class DoctorDashboard implements AutoCloseable {
     private void viewPersonalSchedule() {
         System.out.println("\nCurrent Schedule:");
         System.out.println("----------------------------------------");
-        List<ScheduleEntry> schedule = doctorManager.getDoctorAvailability(doctor.getId());
         
-        if (schedule.isEmpty()) {
-            System.out.println("No availability set.");
+        // Get both availability and confirmed appointments
+        List<ScheduleEntry> schedule = doctorManager.getDoctorAvailability(doctor.getId());
+        List<Appointment> appointments = doctorManager.getUpcomingAppointments(doctor.getId());
+        
+        if (schedule.isEmpty() && appointments.isEmpty()) {
+            System.out.println("No availability or appointments set.");
         } else {
-            displayCurrentSchedule(schedule);
+            // Display availability
+            if (!schedule.isEmpty()) {
+                System.out.println("\nAvailable Time Slots:");
+                displayCurrentSchedule(schedule);
+            }
+            
+            // Display confirmed appointments
+            if (!appointments.isEmpty()) {
+                System.out.println("\nConfirmed Appointments:");
+                appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getAppointmentDate))
+                    .forEach(apt -> System.out.printf("  %s - Patient: %s (ID: %s)\n",
+                        apt.getAppointmentDate().format(DATETIME_FORMATTER),
+                        apt.getPatient().getName(),
+                        apt.getPatient().getId()));
+            }
         }
         System.out.println("----------------------------------------");
     }

@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import pharmacy_management.prescriptions.Prescription;
 
 public class AppointmentList {
@@ -183,5 +184,21 @@ public class AppointmentList {
                 System.err.println("Error saving prescriptions: " + e.getMessage());
             }
         });
+    }
+
+    public List<Appointment> getAppointmentsByDoctor(String doctorId) {
+        return appointments.stream()
+                .filter(apt -> apt.getDoctor().getId().equals(doctorId))
+                .filter(apt -> !apt.getStatus().equalsIgnoreCase("CONFIRMED") 
+                            && !apt.getStatus().equalsIgnoreCase("BOOKED"))
+                .collect(Collectors.toList());
+    }
+
+    public List<Appointment> getAvailableAppointments() {
+        return appointments.stream()
+                .filter(apt -> !apt.getStatus().equalsIgnoreCase("PENDING")    // Not pending approval
+                    && !apt.getStatus().equalsIgnoreCase("CONFIRMED")          // Not confirmed
+                    && apt.getStatus().equalsIgnoreCase("AVAILABLE"))          // Must be available
+                .collect(Collectors.toList());
     }
 }

@@ -111,4 +111,13 @@ public class AppointmentManagerImpl implements IAppointmentManager {
             .filter(outcome -> outcome != null)
             .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Appointment> getUpcomingAppointments(String doctorId) {
+        return appointmentList.getAllAppointments().stream()
+            .filter(a -> a.getDoctor() != null && 
+                        a.getDoctor().getId().equals(doctorId) &&
+                        "Confirmed".equalsIgnoreCase(a.getStatus()))
+            .collect(Collectors.toList());
+    }
 }

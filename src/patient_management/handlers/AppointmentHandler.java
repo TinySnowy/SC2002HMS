@@ -152,13 +152,15 @@ public class AppointmentHandler implements IAppointmentHandler {
     private void createAppointment(Doctor doctor, LocalDateTime dateTime) {
         String appointmentId = "A" + System.currentTimeMillis();
         Appointment appointment = new Appointment(appointmentId, patient, doctor, dateTime);
+        appointment.setStatus("PENDING");
         appointmentList.addAppointment(appointment);
         
         System.out.println("\nAppointment scheduled successfully!");
         System.out.println("Appointment ID: " + appointmentId);
         System.out.println("Doctor: " + doctor.getName() + " (Specialty: " + doctor.getSpecialty() + ")");
         System.out.println("Date/Time: " + dateTime.format(DATE_FORMATTER));
-        System.out.println("Status: Pending");
+        System.out.println("Status: PENDING");
+        System.out.println("Waiting for doctor's confirmation...");
 
         // Save the updated appointments
         appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
