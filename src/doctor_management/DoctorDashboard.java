@@ -7,6 +7,11 @@ import pharmacy_management.appointments.AppointmentOutcome;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.prescriptions.Prescription;
 import user_management.Doctor;
+import doctor_management.services.ScheduleManagerImpl.TimeSlot;
+import doctor_management.services.ScheduleManagerImpl.ScheduleEntry;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -14,7 +19,9 @@ public class DoctorDashboard implements AutoCloseable {
     private final Doctor doctor;
     private final DoctorManagementFacade doctorManager;
     private final Scanner scanner;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public DoctorDashboard(Doctor doctor, AppointmentList appointmentList,
             IAppointmentOutcomeService outcomeService) {
@@ -98,8 +105,134 @@ public class DoctorDashboard implements AutoCloseable {
                 System.out.printf("Please enter a number between %d and %d%n", min, max);
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine(); // Clear invalid input
+                scanner.nextLine();
             }
+        }
+    }
+
+    private void setAvailability() {
+        System.out.println("\nSet Availability");
+        System.out.println("----------------------------------------");
+
+        List<ScheduleEntry> scheduleEntries = new ArrayList<>();
+        boolean continueAdding = true;
+
+        while (continueAdding) {
+            ScheduleEntry entry = getValidatedScheduleEntry();
+            if (entry != null) {
+                scheduleEntries.add(entry);
+                System.out.println("\nSchedule slot added successfully!");
+            }
+
+            System.out.print("\nWould you like to add another availability slot? (Y/N): ");
+            continueAdding = scanner.nextLine().trim().equalsIgnoreCase("Y");
+        }
+
+        if (!scheduleEntries.isEmpty()) {
+            doctorManager.setDoctorAvailability(doctor.getId(), scheduleEntries);
+            System.out.println("\nAvailability updated successfully!");
+            displayCurrentSchedule(scheduleEntries);
+        } else {
+            System.out.println("\nNo availability set.");
+        }
+    }
+
+    private ScheduleEntry getValidatedScheduleEntry() {
+        while (true) {
+            try {
+                // Get and validate date
+                System.out.println("\nEnter the date (YYYY-MM-DD): ");
+                String date = scanner.nextLine().trim();
+                LocalDate scheduleDate = validateAndParseDate(date);
+                if (scheduleDate == null) continue;
+
+                // Get and validate start time
+                System.out.println("\nChoose a start time.");
+                System.out.println("Note: Time must be in a half hour interval (e.g. 09:00, 09:30, etc).");
+                System.out.print("Please enter a time (HH:MM): ");
+                String startTime = scanner.nextLine().trim();
+                if (!validateTime(startTime)) continue;
+
+                // Get and validate end time
+                System.out.println("\nChoose an end time.");
+                System.out.println("Note: Time must be in a half hour interval (e.g. 09:00, 09:30, etc).");
+                System.out.print("Please enter a time (HH:MM): ");
+                String endTime = scanner.nextLine().trim();
+                if (!validateTime(endTime)) continue;
+
+                return new ScheduleEntry(scheduleDate, new TimeSlot(startTime, endTime));
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+                System.out.print("Would you like to try again? (Y/N): ");
+                if (!scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+                    return null;
+                }
+            }
+        }
+    }
+
+    private LocalDate validateAndParseDate(String date) {
+        try {
+            LocalDate scheduleDate = LocalDate.parse(date, DATE_FORMATTER);
+            if (scheduleDate.isBefore(LocalDate.now())) {
+                System.out.println("Cannot set availability for past dates.");
+                return null;
+            }
+            return scheduleDate;
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD format.");
+            return null;
+        }
+    }
+
+    private boolean validateTime(String time) {
+        try {
+            if (!time.matches("^([0-1][0-9]|2[0-3]):[0-5][0-9]$")) {
+                System.out.println("Invalid time format. Please use HH:MM format (24-hour).");
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            System.out.println("Invalid time format. Please use HH:MM format.");
+            return false;
+        }
+    }
+
+    private void viewPersonalSchedule() {
+        System.out.println("\nCurrent Schedule:");
+        System.out.println("----------------------------------------");
+        List<ScheduleEntry> schedule = doctorManager.getDoctorAvailability(doctor.getId());
+        
+        if (schedule.isEmpty()) {
+            System.out.println("No availability set.");
+        } else {
+            displayCurrentSchedule(schedule);
+        }
+        System.out.println("----------------------------------------");
+    }
+
+    private void displayCurrentSchedule(List<ScheduleEntry> schedule) {
+        // Sort schedule entries by date
+        schedule.sort(Comparator.comparing(ScheduleEntry::getDate));
+        
+        LocalDate currentDate = null;
+        for (ScheduleEntry entry : schedule) {
+            LocalDate entryDate = entry.getDate();
+            
+            // Print date header if it's a new date
+            if (!entryDate.equals(currentDate)) {
+                System.out.printf("\n%s (%s):\n", 
+                    entryDate.format(DateTimeFormatter.ofPattern("EEEE")),
+                    entryDate.format(DATE_FORMATTER));
+                currentDate = entryDate;
+            }
+            
+            // Print time slot
+            TimeSlot timeSlot = entry.getTimeSlot();
+            System.out.printf("  %s-%s\n", 
+                timeSlot.getStartTime(),
+                timeSlot.getEndTime());
         }
     }
 
@@ -136,46 +269,6 @@ public class DoctorDashboard implements AutoCloseable {
             System.out.println("Medical record updated successfully.");
         } else {
             System.out.println("No changes made to the medical record.");
-        }
-    }
-
-    private void viewPersonalSchedule() {
-        Map<String, String> schedule = doctorManager.getDoctorAvailability(doctor.getId());
-        System.out.println("\nCurrent Schedule:");
-        System.out.println("----------------------------------------");
-        if (schedule.isEmpty()) {
-            System.out.println("No availability set.");
-        } else {
-            for (Map.Entry<String, String> entry : schedule.entrySet()) {
-                System.out.printf("%s: %s%n", entry.getKey(), entry.getValue());
-            }
-        }
-        System.out.println("----------------------------------------");
-    }
-
-    private void setAvailability() {
-        System.out.println("\nSet Availability");
-        System.out.println("----------------------------------------");
-
-        Map<String, String> weeklySchedule = new HashMap<>();
-        String[] days = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-
-        System.out.println("Enter availability for each day (format: HH:mm-HH:mm, e.g., 09:00-17:00)");
-        System.out.println("Press Enter to skip a day or keep current schedule");
-
-        for (String day : days) {
-            System.out.printf("%s: ", day);
-            String time = scanner.nextLine().trim();
-            if (!time.isEmpty()) {
-                weeklySchedule.put(day, time);
-            }
-        }
-
-        if (!weeklySchedule.isEmpty()) {
-            doctorManager.setDoctorAvailability(doctor.getId(), weeklySchedule);
-            System.out.println("\nAvailability updated successfully!");
-        } else {
-            System.out.println("\nNo availability set.");
         }
     }
 
@@ -234,14 +327,13 @@ public class DoctorDashboard implements AutoCloseable {
         for (Appointment appointment : appointments) {
             System.out.println("\nAppointment ID: " + appointment.getAppointmentId());
             System.out.println("Patient: " + appointment.getPatient().getName());
-            System.out.println("Date: " + appointment.getAppointmentDate().format(DATE_FORMATTER));
+            System.out.println("Date: " + appointment.getAppointmentDate().format(DATETIME_FORMATTER));
             System.out.println("Status: " + appointment.getStatus());
             System.out.println("----------------------------------------");
         }
     }
 
     private void recordAppointmentOutcome() {
-
         System.out.print("Enter Appointment ID (or 'back' to return): ");
         String appointmentId = scanner.nextLine();
 

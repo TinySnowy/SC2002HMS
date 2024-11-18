@@ -17,9 +17,13 @@ public class PatientDashboard {
     private final IAppointmentHandler appointmentHandler;
     private final IPersonalInfoManager personalInfoManager;
     private final PatientMenuPrinter menuPrinter;
+    private final AppointmentList appointmentList;
+    private final UserController userController;
 
     public PatientDashboard(Patient patient, AppointmentList appointmentList, UserController userController) {
         this.patient = patient;
+        this.userController = userController;
+        this.appointmentList = appointmentList;
         this.medicalRecordController = new MedicalRecordController();
         
         // Initialize services
@@ -85,7 +89,6 @@ public class PatientDashboard {
     }
 
     private void manageExistingAppointments() {
-        AppointmentList appointmentList = new AppointmentList(); // This should be injected in a real application
         var appointments = appointmentList.getAppointmentsForPatient(patient.getId());
         
         if (appointments.isEmpty()) {

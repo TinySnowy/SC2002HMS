@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import doctor_management.services.ScheduleManagerImpl.ScheduleEntry;
+import doctor_management.services.ScheduleManagerImpl.TimeSlot;
 
 public class AppointmentHandler implements IAppointmentHandler {
     private final Patient patient;
@@ -28,76 +31,155 @@ public class AppointmentHandler implements IAppointmentHandler {
     @Override
     public void scheduleAppointment() {
         try {
+            // Get available doctors
+            List<User> availableDoctors = getAvailableDoctors();
+            if (availableDoctors.isEmpty()) {
+                System.out.println("No doctors are currently available for appointments.");
+                return;
+            }
+
+            // Display available doctors
             displayAvailableDoctors();
 
-            System.out.print("\nEnter the Doctor ID you wish to schedule with (or 'cancel' to abort): ");
-            String doctorId = scanner.nextLine().trim();
+            // Select doctor
+            Doctor selectedDoctor = selectDoctor(availableDoctors);
+            if (selectedDoctor == null) return;
 
-            if (doctorId.equalsIgnoreCase("cancel")) {
-                System.out.println("Appointment scheduling cancelled.");
+            // Get available slots for selected doctor
+            List<ScheduleEntry> availableSlots = scheduleManager.getAvailableSlots(selectedDoctor.getId());
+            if (availableSlots.isEmpty()) {
+                System.out.println("No available time slots for the selected doctor.");
                 return;
             }
 
-            User doctorUser = userController.getUserById(doctorId);
-            if (doctorUser == null || !(doctorUser instanceof Doctor)) {
-                System.out.println("Invalid doctor ID. Please try again.");
-                return;
-            }
-            Doctor selectedDoctor = (Doctor) doctorUser;
-
-            // Get and display available time slots
-            List<String> availableDays = scheduleManager.getAvailableDays(doctorId);
-            if (availableDays.isEmpty()) {
-                System.out.println("This doctor has no available time slots.");
-                return;
-            }
-
-            System.out.println("\nDoctor's Schedule:");
-            for (String day : availableDays) {
-                String timeSlot = scheduleManager.getTimeSlot(doctorId, day);
-                System.out.printf("%s: %s hours\n", day, timeSlot);
-            }
-
-            // Get appointment time
-            System.out.print("\nEnter appointment date and time (yyyy-MM-dd HH:mm): ");
-            String dateTimeStr = scanner.nextLine();
-            LocalDateTime appointmentDateTime = LocalDateTime.parse(dateTimeStr, DATE_FORMATTER);
-
-            // Validate appointment time
-            if (!validateAppointmentTime(appointmentDateTime, selectedDoctor)) {
-                return;
-            }
+            // Display and select time slot
+            displayAvailableTimeSlots(availableSlots);
+            LocalDateTime selectedDateTime = selectTimeSlot(availableSlots);
+            if (selectedDateTime == null) return;
 
             // Create and save appointment
-            String appointmentId = "A" + System.currentTimeMillis();
-            Appointment appointment = new Appointment(appointmentId, patient, selectedDoctor, appointmentDateTime);
-            appointmentList.addAppointment(appointment);
-
-            // Confirm appointment
-            confirmAppointment(appointment);
+            createAppointment(selectedDoctor, selectedDateTime);
 
         } catch (Exception e) {
             System.out.println("Error scheduling appointment: " + e.getMessage());
         }
     }
 
+    private List<User> getAvailableDoctors() {
+        List<User> allUsers = userController.getAllUsers();
+        return allUsers.stream()
+            .filter(user -> user instanceof Doctor)
+            .filter(doctor -> !scheduleManager.getAvailableSlots(doctor.getId()).isEmpty())
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public void displayAvailableDoctors() {
+        List<User> doctors = getAvailableDoctors();
+        System.out.println("\nAvailable Doctors:");
+        System.out.println("----------------------------------------");
+        
+        if (doctors.isEmpty()) {
+            System.out.println("No doctors available at the moment.");
+            return;
+        }
+
+        printDoctorsTable(doctors);
+    }
+
+    private Doctor selectDoctor(List<User> availableDoctors) {
+        while (true) {
+            System.out.print("\nEnter the Doctor ID you wish to schedule with (or 'cancel' to abort): ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("cancel")) {
+                return null;
+            }
+
+            User doctor = availableDoctors.stream()
+                .filter(d -> d.getId().equals(input))
+                .findFirst()
+                .orElse(null);
+
+            if (doctor instanceof Doctor) {
+                return (Doctor) doctor;
+            }
+
+            System.out.println("Invalid doctor ID. Please try again.");
+        }
+    }
+
+    private void displayAvailableTimeSlots(List<ScheduleEntry> slots) {
+        System.out.println("\nAvailable Time Slots:");
+        System.out.println("----------------------------------------");
+        
+        for (int i = 0; i < slots.size(); i++) {
+            ScheduleEntry entry = slots.get(i);
+            System.out.printf("%d. %s - %s: %s-%s\n", 
+                i + 1,
+                entry.getDate().format(DateTimeFormatter.ofPattern("EEEE")),
+                entry.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                entry.getTimeSlot().getStartTime(),
+                entry.getTimeSlot().getEndTime());
+        }
+        System.out.println("----------------------------------------");
+    }
+
+    private LocalDateTime selectTimeSlot(List<ScheduleEntry> availableSlots) {
+        while (true) {
+            System.out.print("\nEnter the number of your preferred time slot (or 0 to cancel): ");
+            try {
+                int choice = Integer.parseInt(scanner.nextLine().trim());
+                
+                if (choice == 0) {
+                    return null;
+                }
+
+                if (choice > 0 && choice <= availableSlots.size()) {
+                    ScheduleEntry selected = availableSlots.get(choice - 1);
+                    return selected.getDate().atTime(
+                        java.time.LocalTime.parse(selected.getTimeSlot().getStartTime(),
+                        DateTimeFormatter.ofPattern("HH:mm")));
+                }
+
+                System.out.println("Invalid selection. Please choose a number between 1 and " + availableSlots.size());
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
+            }
+        }
+    }
+
+    private void createAppointment(Doctor doctor, LocalDateTime dateTime) {
+        String appointmentId = "A" + System.currentTimeMillis();
+        Appointment appointment = new Appointment(appointmentId, patient, doctor, dateTime);
+        appointmentList.addAppointment(appointment);
+        
+        System.out.println("\nAppointment scheduled successfully!");
+        System.out.println("Appointment ID: " + appointmentId);
+        System.out.println("Doctor: " + doctor.getName() + " (Specialty: " + doctor.getSpecialty() + ")");
+        System.out.println("Date/Time: " + dateTime.format(DATE_FORMATTER));
+        System.out.println("Status: Pending");
+
+        // Save the updated appointments
+        appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
+    }
+
     @Override
     public void rescheduleAppointment(Appointment appointment) {
         try {
             Doctor doctor = appointment.getDoctor();
-            List<String> availableDays = scheduleManager.getAvailableDays(doctor.getId());
+            List<ScheduleEntry> availableSlots = scheduleManager.getAvailableSlots(doctor.getId());
 
-            System.out.println("\nDoctor's Schedule:");
-            for (String day : availableDays) {
-                String timeSlot = scheduleManager.getTimeSlot(doctor.getId(), day);
-                System.out.printf("%s: %s hours\n", day, timeSlot);
+            if (availableSlots.isEmpty()) {
+                System.out.println("No available time slots for rescheduling.");
+                return;
             }
 
-            System.out.print("Enter new appointment date and time (yyyy-MM-dd HH:mm): ");
-            String newDateTimeStr = scanner.nextLine();
-            LocalDateTime newDateTime = LocalDateTime.parse(newDateTimeStr, DATE_FORMATTER);
-
-            if (!validateAppointmentTime(newDateTime, doctor)) {
+            displayAvailableTimeSlots(availableSlots);
+            LocalDateTime newDateTime = selectTimeSlot(availableSlots);
+            
+            if (newDateTime == null) {
+                System.out.println("Rescheduling cancelled.");
                 return;
             }
 
@@ -116,81 +198,12 @@ public class AppointmentHandler implements IAppointmentHandler {
         System.out.print("Are you sure you want to cancel this appointment? (Y/N): ");
         String confirm = scanner.nextLine().trim().toUpperCase();
         if (confirm.equals("Y")) {
-            appointment.decline();
+            appointment.setStatus("Cancelled");
             appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
             System.out.println("Appointment cancelled successfully.");
         } else {
             System.out.println("Cancellation aborted.");
         }
-    }
-
-    @Override
-    public void displayAvailableDoctors() {
-        System.out.println("\nAvailable Doctors:");
-        System.out.println("----------------------------------------");
-        List<User> allStaff = userController.getAllUsers();
-        List<User> doctors = allStaff.stream()
-                .filter(user -> user instanceof Doctor)
-                .filter(user -> !scheduleManager.getAvailableDays(user.getId()).isEmpty())
-                .toList();
-
-        if (doctors.isEmpty()) {
-            System.out.println("No doctors available at the moment.");
-            return;
-        }
-
-        printDoctorsTable(doctors);
-    }
-
-    @Override
-    public boolean isDoctorAvailable(Doctor doctor, LocalDateTime appointmentDateTime) {
-        List<Appointment> doctorAppointments = appointmentList.getAppointmentsForDoctor(doctor.getId());
-        for (Appointment existingAppointment : doctorAppointments) {
-            if (existingAppointment.getStatus().equals("Cancelled")) {
-                continue;
-            }
-            if (isTimeSlotOverlapping(appointmentDateTime, existingAppointment.getAppointmentDate())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean validateAppointmentTime(LocalDateTime dateTime, Doctor doctor) {
-        if (dateTime.isBefore(LocalDateTime.now())) {
-            System.out.println("Cannot schedule appointments in the past.");
-            return false;
-        }
-
-        if (!scheduleManager.isDoctorAvailable(doctor.getId(), dateTime)) {
-            System.out.println("Doctor is not available at this time. Please check the schedule and choose a valid time slot.");
-            return false;
-        }
-
-        if (!isDoctorAvailable(doctor, dateTime)) {
-            System.out.println("Doctor already has an appointment at this time. Please choose another time.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isTimeSlotOverlapping(LocalDateTime newTime, LocalDateTime existingTime) {
-        LocalDateTime existingEndTime = existingTime.plusHours(1);
-        LocalDateTime newEndTime = newTime.plusHours(1);
-
-        return (newTime.isEqual(existingTime) || newTime.isAfter(existingTime)) && newTime.isBefore(existingEndTime) ||
-               (newEndTime.isAfter(existingTime) && newEndTime.isBefore(existingEndTime)) ||
-               newEndTime.isEqual(existingEndTime);
-    }
-
-    private void confirmAppointment(Appointment appointment) {
-        System.out.println("\nAppointment scheduled successfully!");
-        System.out.println("Appointment ID: " + appointment.getAppointmentId());
-        System.out.println("Doctor: " + appointment.getDoctor().getName() + 
-                         " (Specialty: " + appointment.getDoctor().getSpecialty() + ")");
-        System.out.println("Date/Time: " + appointment.getAppointmentDate().format(DATE_FORMATTER));
-        System.out.println("Status: Pending");
     }
 
     private void printDoctorsTable(List<User> doctors) {
@@ -219,6 +232,6 @@ public class AppointmentHandler implements IAppointmentHandler {
                 row.append(" | ");
             }
         }
-        System.out.println(row.toString());
+        System.out.println(row);
     }
 }

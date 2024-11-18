@@ -141,9 +141,24 @@ public class AppointmentList {
     }
 
     public List<Appointment> getAppointmentsForPatient(String patientId) {
+        
+        List<Appointment> patientAppointments = appointments.stream()
+            .filter(app -> {
+                System.out.println("Checking appointment: " + app.getAppointmentId() 
+                    + " Patient ID: " + app.getPatient().getId());
+                return app.getPatient().getId().equals(patientId);
+            })
+            .collect(java.util.stream.Collectors.toList());
+        return patientAppointments;
+    }
+
+    public List<Appointment> getUpcomingAppointmentsForPatient(String patientId) {
         return appointments.stream()
-                .filter(app -> app.getPatient().getId().equals(patientId))
-                .collect(java.util.stream.Collectors.toList());
+            .filter(a -> a.getPatient() != null && 
+                        a.getPatient().getId().equals(patientId) &&
+                        "Confirmed".equalsIgnoreCase(a.getStatus()) &&
+                        a.getAppointmentDate().isAfter(LocalDateTime.now()))
+            .collect(java.util.stream.Collectors.toList());
     }
 
     public List<Appointment> getAppointmentsForDoctor(String doctorId) {

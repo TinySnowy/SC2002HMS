@@ -8,4 +8,6 @@ public interface IAppointmentOutcomeService {
   boolean updatePrescriptionStatus(String appointmentId, String prescriptionId, String status);
 
   AppointmentOutcome getOutcomeByAppointmentId(String appointmentId);
+
+  boolean saveAppointmentOutcome(AppointmentOutcome outcome);
 }

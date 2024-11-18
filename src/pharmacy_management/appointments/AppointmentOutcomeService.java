@@ -125,4 +125,13 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
   public AppointmentOutcome getOutcomeByAppointmentId(String appointmentId) {
     return outcomes.get(appointmentId);
   }
+
+  @Override
+  public boolean saveAppointmentOutcome(AppointmentOutcome outcome) {
+    if (outcome == null || outcome.getAppointmentId() == null) {
+      return false;
+    }
+    outcomes.put(outcome.getAppointmentId(), outcome);
+    return true;
+  }
 }

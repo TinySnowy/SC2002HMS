@@ -3,103 +3,200 @@ package doctor_management.services;
 import doctor_management.interfaces.IScheduleManager;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 public class ScheduleManagerImpl implements IScheduleManager {
-  private final Map<String, Map<String, String>> doctorSchedules;
-  private static final String SCHEDULE_FILE = "SC2002HMS/data/DoctorSchedules.csv";
-  private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private final Map<String, DoctorSchedule> doctorSchedules;
+    private static final String SCHEDULE_FILE = "SC2002HMS/data/DoctorSchedules.csv";
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-  public ScheduleManagerImpl() {
-    this.doctorSchedules = new HashMap<>();
-    loadSchedulesFromCSV();
-  }
-
-  @Override
-  public void setAvailability(String doctorId, Map<String, String> weeklySchedule) {
-    doctorSchedules.put(doctorId, new HashMap<>(weeklySchedule));
-    saveSchedulesToCSV();
-  }
-
-  @Override
-  public Map<String, String> getAvailability(String doctorId) {
-    return new HashMap<>(doctorSchedules.getOrDefault(doctorId, new HashMap<>()));
-  }
-
-  @Override
-  public boolean isAvailable(String doctorId, LocalDateTime dateTime) {
-    Map<String, String> schedule = doctorSchedules.get(doctorId);
-    if (schedule == null)
-      return false;
-
-    String dayOfWeek = dateTime.getDayOfWeek().toString();
-    String timeSlot = schedule.get(dayOfWeek);
-    return isTimeWithinSlot(dateTime.toLocalTime(), timeSlot);
-  }
-
-  private boolean isTimeWithinSlot(LocalTime time, String timeSlot) {
-    if (timeSlot == null || timeSlot.isEmpty())
-      return false;
-
-    try {
-      String[] parts = timeSlot.split("-");
-      if (parts.length != 2)
-        return false;
-
-      LocalTime start = LocalTime.parse(parts[0].trim(), TIME_FORMATTER);
-      LocalTime end = LocalTime.parse(parts[1].trim(), TIME_FORMATTER);
-
-      return !time.isBefore(start) && !time.isAfter(end);
-    } catch (Exception e) {
-      System.err.println("Error parsing time slot: " + e.getMessage());
-      return false;
+    public ScheduleManagerImpl() {
+        this.doctorSchedules = new HashMap<>();
+        loadSchedulesFromCSV();
     }
-  }
 
-  private void loadSchedulesFromCSV() {
-    try {
-      List<String[]> records = CSVReaderUtil.readCSV(SCHEDULE_FILE);
-      boolean isFirstRow = true;
+    @Override
+    public void setAvailability(String doctorId, List<ScheduleEntry> scheduleEntries) {
+        DoctorSchedule schedule = new DoctorSchedule(scheduleEntries);
+        doctorSchedules.put(doctorId, schedule);
+        saveSchedulesToCSV();
+    }
 
-      for (String[] record : records) {
-        if (isFirstRow) {
-          isFirstRow = false;
-          continue;
+    @Override
+    public List<ScheduleEntry> getAvailability(String doctorId) {
+        DoctorSchedule schedule = doctorSchedules.get(doctorId);
+        return schedule != null ? schedule.getScheduleEntries() : new ArrayList<>();
+    }
+
+    @Override
+    public boolean isAvailable(String doctorId, LocalDateTime dateTime) {
+        DoctorSchedule schedule = doctorSchedules.get(doctorId);
+        if (schedule == null) return false;
+        return schedule.isTimeSlotAvailable(dateTime);
+    }
+
+    @Override
+    public boolean validateTimeSlot(String time) {
+        try {
+            LocalTime proposedTime = LocalTime.parse(time, TIME_FORMATTER);
+            return proposedTime.getMinute() % 30 == 0;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean validateDate(String date) {
+        try {
+            LocalDate.parse(date, DATE_FORMATTER);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+    private void loadSchedulesFromCSV() {
+        try {
+            List<String[]> records = CSVReaderUtil.readCSV(SCHEDULE_FILE);
+            boolean isFirstRow = true;
+
+            for (String[] record : records) {
+                if (isFirstRow) {
+                    isFirstRow = false;
+                    continue;
+                }
+
+                String doctorId = record[0];
+                String date = record[1];
+                String startTime = record[2];
+                String endTime = record[3];
+
+                DoctorSchedule schedule = doctorSchedules.computeIfAbsent(
+                    doctorId, k -> new DoctorSchedule(new ArrayList<>()));
+                
+                schedule.addScheduleEntry(new ScheduleEntry(
+                    LocalDate.parse(date, DATE_FORMATTER),
+                    new TimeSlot(startTime, endTime)
+                ));
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading schedules: " + e.getMessage());
+        }
+    }
+
+    private void saveSchedulesToCSV() {
+        try {
+            CSVWriterUtil.writeCSV(SCHEDULE_FILE, writer -> {
+                writer.write("DoctorID,Date,StartTime,EndTime\n");
+                for (Map.Entry<String, DoctorSchedule> entry : doctorSchedules.entrySet()) {
+                    String doctorId = entry.getKey();
+                    DoctorSchedule schedule = entry.getValue();
+
+                    for (ScheduleEntry scheduleEntry : schedule.getScheduleEntries()) {
+                        TimeSlot timeSlot = scheduleEntry.getTimeSlot();
+                        writer.write(String.format("%s,%s,%s,%s\n",
+                            doctorId,
+                            scheduleEntry.getDate().format(DATE_FORMATTER),
+                            timeSlot.getStartTime(),
+                            timeSlot.getEndTime()));
+                    }
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Error saving schedules: " + e.getMessage());
+        }
+    }
+
+    // Inner class to represent a time slot with validation
+    public static class TimeSlot {
+        private final LocalTime startTime;
+        private final LocalTime endTime;
+
+        public TimeSlot(String startTime, String endTime) {
+            this.startTime = LocalTime.parse(startTime, TIME_FORMATTER);
+            this.endTime = LocalTime.parse(endTime, TIME_FORMATTER);
+            validateTimeSlot();
         }
 
-        String doctorId = record[0];
-        Map<String, String> schedule = doctorSchedules
-            .computeIfAbsent(doctorId, k -> new HashMap<>());
-        schedule.put(record[1], record[2]);
-      }
-    } catch (Exception e) {
-      System.err.println("Error loading schedules: " + e.getMessage());
-    }
-  }
-
-  private void saveSchedulesToCSV() {
-    try {
-      CSVWriterUtil.writeCSV(SCHEDULE_FILE, writer -> {
-        writer.write("DoctorID,Day,TimeSlot\n");
-        for (Map.Entry<String, Map<String, String>> entry : doctorSchedules.entrySet()) {
-          String doctorId = entry.getKey();
-          Map<String, String> schedule = entry.getValue();
-
-          for (Map.Entry<String, String> scheduleEntry : schedule.entrySet()) {
-            writer.write(String.format("%s,%s,%s\n",
-                doctorId,
-                scheduleEntry.getKey(),
-                scheduleEntry.getValue()));
-          }
+        private void validateTimeSlot() {
+            if (startTime.getMinute() % 30 != 0 || endTime.getMinute() % 30 != 0) {
+                throw new IllegalArgumentException("Times must be in half-hour intervals");
+            }
+            if (!startTime.isBefore(endTime)) {
+                throw new IllegalArgumentException("Start time must be before end time");
+            }
         }
-      });
-    } catch (Exception e) {
-      System.err.println("Error saving schedules: " + e.getMessage());
+
+        public boolean isTimeWithinSlot(LocalTime time) {
+            return !time.isBefore(startTime) && !time.isAfter(endTime);
+        }
+
+        public String getStartTime() {
+            return startTime.format(TIME_FORMATTER);
+        }
+
+        public String getEndTime() {
+            return endTime.format(TIME_FORMATTER);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s-%s", getStartTime(), getEndTime());
+        }
     }
-  }
+
+    // Class to represent a schedule entry (date + time slot)
+    public static class ScheduleEntry {
+        private final LocalDate date;
+        private final TimeSlot timeSlot;
+
+        public ScheduleEntry(LocalDate date, TimeSlot timeSlot) {
+            this.date = date;
+            this.timeSlot = timeSlot;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public TimeSlot getTimeSlot() {
+            return timeSlot;
+        }
+
+        public boolean isDateTimeWithinSlot(LocalDateTime dateTime) {
+            return date.equals(dateTime.toLocalDate()) && 
+                   timeSlot.isTimeWithinSlot(dateTime.toLocalTime());
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s: %s", date.format(DATE_FORMATTER), timeSlot);
+        }
+    }
+
+    // Inner class to represent a doctor's complete schedule
+    private static class DoctorSchedule {
+        private final List<ScheduleEntry> scheduleEntries;
+
+        public DoctorSchedule(List<ScheduleEntry> scheduleEntries) {
+            this.scheduleEntries = new ArrayList<>(scheduleEntries);
+        }
+
+        public void addScheduleEntry(ScheduleEntry entry) {
+            scheduleEntries.add(entry);
+        }
+
+        public boolean isTimeSlotAvailable(LocalDateTime dateTime) {
+            return scheduleEntries.stream()
+                .anyMatch(entry -> entry.isDateTimeWithinSlot(dateTime));
+        }
+
+        public List<ScheduleEntry> getScheduleEntries() {
+            return new ArrayList<>(scheduleEntries);
+        }
+    }
 }
