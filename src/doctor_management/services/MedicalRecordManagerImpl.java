@@ -22,7 +22,7 @@ public class MedicalRecordManagerImpl implements IMedicalRecordManager {
   }
 
   @Override
-  public void updateMedicalRecord(String patientId, String diagnosis, String prescription) {
+  public void updateMedicalRecord(String patientId, String diagnosis, String prescription, String doctorId) {
     MedicalRecord record = recordController.getRecordByPatientId(patientId);
     if (record != null) {
       try {

@@ -45,7 +45,7 @@ public class Main {
         System.out.println("Initializing Hospital Management System...");
         try {
             userController.persistAllData();
-            appointmentList.loadAppointmentsFromCSV(APPOINTMENT_FILE, userController);
+            appointmentList.loadAppointmentsFromCSV(APPOINTMENT_FILE);
             inventoryManager.loadInventoryFromCSV(MEDICINE_FILE);
             System.out.println("System initialization completed successfully.");
         } catch (Exception e) {

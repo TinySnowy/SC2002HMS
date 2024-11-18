@@ -148,4 +148,9 @@ public class MedicalRecordController {
     public boolean hasRecord(String patientId) {
         return recordsMap.containsKey(patientId);
     }
+
+    public void updateMedicalRecord(String patientId, String diagnosis, String prescription, String doctorId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateMedicalRecord'");
+    }
 }

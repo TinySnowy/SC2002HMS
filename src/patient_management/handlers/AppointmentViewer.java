@@ -82,7 +82,7 @@ public class AppointmentViewer implements IAppointmentViewer {
         boolean hasUpcoming = false;
         for (Appointment appointment : appointments) {
             if (appointment.getAppointmentDate().isAfter(now) &&
-                    !appointment.getStatus().equalsIgnoreCase("Cancelled")) {
+                    appointment.getStatus().equalsIgnoreCase("Confirmed")) {
                 displayAppointmentDetails(appointment);
                 hasUpcoming = true;
             }

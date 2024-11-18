@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.ArrayList;
 
 public class UserController {
+    private static UserController instance;
     private final Map<String, User> userDatabase;
     private static final String STAFF_FILE = "SC2002HMS/data/Staff_List.csv";
     private static final String PATIENT_FILE = "SC2002HMS/data/Patient_List.csv";
@@ -17,6 +18,13 @@ public class UserController {
         userDatabase = new HashMap<>();
         loadPatientData();
         loadStaffData();
+    }
+
+    public static UserController getInstance() {
+        if (instance == null) {
+            instance = new UserController();
+        }
+        return instance;
     }
 
     private void loadPatientData() {

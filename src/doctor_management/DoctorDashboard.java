@@ -38,7 +38,7 @@ public class DoctorDashboard implements AutoCloseable {
         while (running) {
             try {
                 displayMenu();
-                int choice = getValidatedInput("Enter your choice: ", 1, 8);
+                int choice = getValidatedInput("Enter your choice: ", 1, 7);
                 running = handleMenuChoice(choice);
             } catch (Exception e) {
                 System.err.println("An error occurred: " + e.getMessage());
@@ -52,12 +52,11 @@ public class DoctorDashboard implements AutoCloseable {
         System.out.println("----------------------------------------");
         System.out.println("1. View Patient Medical Records");
         System.out.println("2. Update Patient Medical Records");
-        System.out.println("3. View Personal Schedule");
+        System.out.println("3. View Schedule");
         System.out.println("4. Set Availability for Appointments");
         System.out.println("5. Accept/Decline Appointment Requests");
-        System.out.println("6. View Upcoming Appointments");
-        System.out.println("7. Record Appointment Outcome");
-        System.out.println("8. Logout");
+        System.out.println("6. Record Appointment Outcome");
+        System.out.println("7. Logout");
         System.out.println("----------------------------------------");
     }
 
@@ -79,12 +78,9 @@ public class DoctorDashboard implements AutoCloseable {
                 manageAppointmentRequests();
                 return true;
             case 6:
-                viewUpcomingAppointments();
-                return true;
-            case 7:
                 recordAppointmentOutcome();
                 return true;
-            case 8:
+            case 7:
                 System.out.println("Logging out of Doctor Dashboard...");
                 return false;
             default:
@@ -329,25 +325,6 @@ public class DoctorDashboard implements AutoCloseable {
             } catch (Exception e) {
                 System.err.println("Error managing appointment: " + e.getMessage());
             }
-        }
-    }
-
-    private void viewUpcomingAppointments() {
-        System.out.println("\nUpcoming Appointments:");
-        System.out.println("----------------------------------------");
-        List<Appointment> appointments = doctorManager.viewPendingAppointments(doctor.getId());
-
-        if (appointments.isEmpty()) {
-            System.out.println("No upcoming appointments found.");
-            return;
-        }
-
-        for (Appointment appointment : appointments) {
-            System.out.println("\nAppointment ID: " + appointment.getAppointmentId());
-            System.out.println("Patient: " + appointment.getPatient().getName());
-            System.out.println("Date: " + appointment.getAppointmentDate().format(DATETIME_FORMATTER));
-            System.out.println("Status: " + appointment.getStatus());
-            System.out.println("----------------------------------------");
         }
     }
 

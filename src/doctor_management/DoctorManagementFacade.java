@@ -8,7 +8,9 @@ import appointment_management.Appointment;
 import pharmacy_management.appointments.AppointmentOutcome;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.prescriptions.Prescription;
+import user_management.UserController;
 import doctor_management.services.ScheduleManagerImpl.ScheduleEntry;
+import doctor_management.services.MedicalRecordManagerImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,13 +22,19 @@ public class DoctorManagementFacade {
     private final IScheduleManager scheduleManager;
     private final AppointmentList appointmentList;
 
-    public DoctorManagementFacade(MedicalRecordController recordController,
+      public DoctorManagementFacade(MedicalRecordController recordController,
             AppointmentList appointmentList,
             IAppointmentOutcomeService outcomeService) {
+        this.appointmentList = appointmentList;
+        // Load appointments first
+        this.appointmentList.loadAppointmentsFromCSV("SC2002HMS/data/Appointments.csv");
+        
         this.medicalRecordManager = new MedicalRecordManagerImpl(recordController);
         this.appointmentManager = new AppointmentManagerImpl(appointmentList, outcomeService);
         this.scheduleManager = new ScheduleManagerImpl();
-        this.appointmentList = appointmentList;
+        
+        System.out.println("DoctorManagementFacade initialized");
+        System.out.println("Total appointments loaded: " + appointmentList.getAllAppointments().size());
     }
 
     // Medical Record Management
@@ -41,7 +49,7 @@ public class DoctorManagementFacade {
     public void updatePatientRecord(String doctorId, String patientId,
             String diagnosis, String prescription) {
         if (medicalRecordManager.hasAccessToRecord(doctorId, patientId)) {
-            medicalRecordManager.updateMedicalRecord(patientId, diagnosis, prescription);
+            medicalRecordManager.updateMedicalRecord(patientId, diagnosis, prescription, doctorId);
         } else {
             System.out.println("Patient record not found. Please check the Patient ID.");
         }
