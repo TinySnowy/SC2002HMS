@@ -1,14 +1,47 @@
 package user_management;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class Patient extends User {
+    private LocalDate dateOfBirth;
+    private String gender;
+    private String bloodGroup;
     private String contactInfo;
     private String email;
 
-    public Patient(String id, String name, String rawPassword,
-            String contactInfo, String email, boolean isFirstLogin) {
-        super(id, name, "Patient", rawPassword, "Unknown", 0, isFirstLogin);
+    public Patient(String id, String name, String password, LocalDate dateOfBirth, 
+                  String gender, String bloodGroup, String contactInfo, String email) {
+        super(id, name, password, "Patient");
+        this.dateOfBirth = dateOfBirth;
+        this.gender = gender;
+        this.bloodGroup = bloodGroup;
         this.contactInfo = contactInfo;
         this.email = email;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
     }
 
     public String getContactInfo() {
@@ -27,16 +60,17 @@ public class Patient extends User {
         this.email = email;
     }
 
-    public void displayMenu() {
-        System.out.println("Patient Menu:");
-        System.out.println("1. View Medical Record");
-        System.out.println("2. Update Personal Information");
-        System.out.println("3. View Available Appointment Slots");
-        System.out.println("4. Schedule an Appointment");
-        System.out.println("5. Reschedule an Appointment");
-        System.out.println("6. Cancel an Appointment");
-        System.out.println("7. View Scheduled Appointments");
-        System.out.println("8. View Past Appointment Outcome Records");
-        System.out.println("9. Logout");
+    @Override
+    public String toString() {
+        return String.format("Patient ID: %s\nName: %s\nDOB: %s\nGender: %s\nBlood Group: %s\n" +
+                           "Contact: %s\nEmail: %s",
+                           getId(), getName(), 
+                           dateOfBirth.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                           gender, bloodGroup, contactInfo, email);
+    }
+
+    @Override
+    public String getUserType() {
+        return "Patient";
     }
 }

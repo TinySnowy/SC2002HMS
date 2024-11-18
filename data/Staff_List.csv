@@ -1,6 +1,6 @@
 ID,Name,Role,Specialty/License,Gender,Age
-D002,Dr. Bob White,Doctor,Pediatrics,Male,45
-D001,Dr. Alice Green,Doctor,Orthopedics,Female,46
 P001,Pharmacist Anna Taylor,Pharmacist,License12345,Female,47
 P002,Pharmacist Ryan Martin,Pharmacist,License67890,Male,24
 A001,Sarah Lee,Administrator,,Female,40
+D002,Dr. Bob White,Doctor,Pediatrics,Male,45
+D001,Dr. Alice Green,Doctor,Orthopedics,Female,46

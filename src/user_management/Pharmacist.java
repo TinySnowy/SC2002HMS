@@ -21,4 +21,8 @@ public class Pharmacist extends User {
         System.out.println("4. Submit Replenishment Request");
         System.out.println("5. Logout");
     }
+    @Override
+public String getUserType() {
+        return "Pharmacist";
+    }
 }

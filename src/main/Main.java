@@ -17,7 +17,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             // Initialize core services
-            UserController userController = new UserController();
+            UserController userController = UserController.getInstance();
             AppointmentList appointmentList = new AppointmentList();
             IInventoryService inventoryService = new InventoryService();
             IReplenishmentService replenishmentService = new ReplenishmentService(inventoryService);

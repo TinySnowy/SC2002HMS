@@ -37,4 +37,9 @@ public class Doctor extends User {
         System.out.println("7. Record Appointment Outcome");
         System.out.println("8. Logout");
     }
+
+    @Override
+    public String getUserType() {
+        return "Doctor";
+    }
 }

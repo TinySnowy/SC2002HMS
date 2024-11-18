@@ -49,7 +49,6 @@ public class PatientDashboard {
             }
         }
     }
-
     private boolean handleMenuChoice(int choice) {
         switch (choice) {
             case 1:
@@ -85,9 +84,10 @@ public class PatientDashboard {
             menuPrinter.displayError("No medical record found.");
             return;
         }
-        record.displayRecord();
+        
+        PatientDetailViewer detailViewer = new PatientDetailViewer();
+        detailViewer.displayFullPatientRecord(record);
     }
-
     private void manageExistingAppointments() {
         var appointments = appointmentList.getAppointmentsForPatient(patient.getId());
         

@@ -3,20 +3,24 @@ package patient_management.controllers;
 import patient_management.model.MedicalRecord;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
+import user_management.UserController;
+import user_management.User;
+import user_management.Patient;
 import java.io.File;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class MedicalRecordController {
     private final Map<String, MedicalRecord> recordsMap;
     private static final String MEDICAL_RECORD_PATH = "SC2002HMS/data/Medical_Record.csv";
+    private final UserController userController;
 
     public MedicalRecordController() {
         this.recordsMap = new HashMap<>();
+        this.userController = UserController.getInstance();
         initializeFile();
         loadRecordsFromCSV();
     }
@@ -57,10 +61,17 @@ public class MedicalRecordController {
         String diagnosis = row[2].trim();
         String prescription = row[3].trim();
 
-        // Skip empty records
         if (patientId.isEmpty() || name.isEmpty()) {
             return;
         }
+
+        // Get patient from UserController
+        User user = userController.getUserById(patientId);
+        if (!(user instanceof Patient)) {
+            System.err.println("Invalid patient ID in medical record: " + patientId);
+            return;
+        }
+        Patient patient = (Patient) user;
 
         MedicalRecord record = new MedicalRecord(patientId, name, diagnosis, prescription);
         recordsMap.put(patientId, record);
@@ -94,12 +105,37 @@ public class MedicalRecordController {
         }
 
         if (!recordsMap.containsKey(patientId)) {
-            MedicalRecord record = new MedicalRecord(patientId.trim(), name.trim(), "", "");
+            // Get patient from UserController
+            User user = userController.getUserById(patientId);
+            if (!(user instanceof Patient)) {
+                System.err.println("Invalid patient ID");
+                return;
+            }
+            Patient patient = (Patient) user;
+
+            MedicalRecord record = new MedicalRecord(patientId.trim(), name.trim(), "",   "");            
             recordsMap.put(patientId, record);
             saveRecords();
             System.out.println("New medical record created for patient: " + name);
         } else {
             System.err.println("Medical record already exists for patient ID: " + patientId);
+        }
+    }
+
+    public void updateMedicalRecord(String patientId, String diagnosis, String prescription, String doctorId) {
+        MedicalRecord record = recordsMap.get(patientId);
+        if (record != null) {
+            if (diagnosis != null && !diagnosis.trim().isEmpty()) {
+                record.setDiagnosis(diagnosis.trim());
+            }
+            if (prescription != null && !prescription.trim().isEmpty()) {
+                record.setPrescription(prescription.trim());
+            }
+            saveRecords();
+            System.out.println("Medical record updated successfully by Doctor " + doctorId + 
+                             " for patient: " + patientId);
+        } else {
+            System.err.println("No medical record found for patient: " + patientId);
         }
     }
 
@@ -147,10 +183,5 @@ public class MedicalRecordController {
 
     public boolean hasRecord(String patientId) {
         return recordsMap.containsKey(patientId);
-    }
-
-    public void updateMedicalRecord(String patientId, String diagnosis, String prescription, String doctorId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateMedicalRecord'");
     }
 }

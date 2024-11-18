@@ -3,6 +3,8 @@ package user_management;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
 import utils.PasswordUtil;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +15,9 @@ public class UserController {
     private final Map<String, User> userDatabase;
     private static final String STAFF_FILE = "SC2002HMS/data/Staff_List.csv";
     private static final String PATIENT_FILE = "SC2002HMS/data/Patient_List.csv";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public UserController() {
+    private UserController() {
         userDatabase = new HashMap<>();
         loadPatientData();
         loadStaffData();
@@ -38,24 +41,33 @@ public class UserController {
             }
 
             try {
-                if (record.length < 4) {
+                if (record.length < 8) {
                     System.err.println("Invalid patient record: " + String.join(",", record));
                     continue;
                 }
 
-                String id = record[0];
-                String name = record[1];
-                String contactInfo = record[2];
-                String email = record[3];
-                String password = record.length > 4 ? record[4] : PasswordUtil.hashPassword("password");
-                boolean isFirstLogin = record.length > 5 ? Boolean.parseBoolean(record[5]) : true;
+                String id = record[0].trim();
+                String name = record[1].trim();
+                String password = record[2].trim();
+                LocalDate dob = LocalDate.parse(record[3].trim(), DATE_FORMATTER);
+                String gender = record[4].trim();
+                String bloodGroup = record[5].trim();
+                String contactInfo = record[6].trim();
+                String email = record[7].trim();
+                boolean isFirstLogin = record.length > 8 ? Boolean.parseBoolean(record[8].trim()) : true;
 
-                Patient patient = new Patient(id, name, password, contactInfo, email, isFirstLogin);
+                Patient patient = new Patient(id, name, password, dob, gender, bloodGroup, 
+                                           contactInfo, email);
+                patient.setFirstLogin(isFirstLogin);
                 addUser(patient);
+                
+                System.out.println("Loaded patient: " + id); // Debug log
             } catch (Exception e) {
                 System.err.println("Error loading patient data: " + e.getMessage());
             }
         }
+        System.out.println("Total patients loaded: " + 
+                          userDatabase.values().stream().filter(u -> u instanceof Patient).count());
     }
 
     private void loadStaffData() {
@@ -74,40 +86,45 @@ public class UserController {
                     continue;
                 }
 
-                String id = record[0];
-                String name = record[1];
-                String role = record[2];
-                String specialtyOrLicense = record[3];
-                String gender = record[4];
-                int age = Integer.parseInt(record[5]);
+                String id = record[0].trim();
+                String name = record[1].trim();
+                String role = record[2].trim();
+                String specialtyOrLicense = record[3].trim();
+                String gender = record[4].trim();
+                int age = Integer.parseInt(record[5].trim());
                 String passwordHash = PasswordUtil.hashPassword("password");
 
-                User user = createStaffUser(id, name, role, specialtyOrLicense, gender, age, passwordHash, true);
+                User user = createStaffUser(id, name, role, specialtyOrLicense, gender, age, 
+                                          passwordHash, true);
                 if (user != null) {
                     addUser(user);
+                    System.out.println("Loaded staff member: " + id); // Debug log
                 }
             } catch (Exception e) {
                 System.err.println("Error loading staff data: " + e.getMessage());
             }
         }
+        System.out.println("Total staff loaded: " + 
+                          userDatabase.values().stream().filter(u -> !(u instanceof Patient)).count());
     }
 
     private User createStaffUser(String id, String name, String role, String specialtyOrLicense,
             String gender, int age, String passwordHash, boolean isFirstLogin) {
-        switch (role.toLowerCase()) {
-            case "doctor":
-                return new Doctor(id, name, passwordHash, specialtyOrLicense, gender, age, isFirstLogin);
-            case "pharmacist":
-                return new Pharmacist(id, name, passwordHash, specialtyOrLicense, gender, age, isFirstLogin);
-            case "administrator":
-                return new Administrator(id, name, passwordHash, gender, age, isFirstLogin);
-            default:
+        return switch (role.toLowerCase()) {
+            case "doctor" -> new Doctor(id, name, passwordHash, specialtyOrLicense, gender, age, isFirstLogin);
+            case "pharmacist" -> new Pharmacist(id, name, passwordHash, specialtyOrLicense, gender, age, isFirstLogin);
+            case "administrator" -> new Administrator(id, name, passwordHash, gender, age, isFirstLogin);
+            default -> {
                 System.err.println("Invalid role: " + role);
-                return null;
-        }
+                yield null;
+            }
+        };
     }
 
     public void addUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         if (userDatabase.containsKey(user.getId())) {
             throw new IllegalArgumentException("User ID already exists: " + user.getId());
         }
@@ -115,6 +132,9 @@ public class UserController {
     }
 
     public void removeUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
         if (!userDatabase.containsKey(userId)) {
             throw new IllegalArgumentException("User not found: " + userId);
         }
@@ -122,13 +142,20 @@ public class UserController {
     }
 
     public void updateUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         if (!userDatabase.containsKey(user.getId())) {
             throw new IllegalArgumentException("User not found: " + user.getId());
         }
         userDatabase.put(user.getId(), user);
+        persistAllData(); // Save changes immediately
     }
 
     public User getUserById(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return null;
+        }
         return userDatabase.get(id);
     }
 
@@ -137,24 +164,32 @@ public class UserController {
     }
 
     public List<User> getUsersByRole(String role) {
+        if (role == null || role.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
         return userDatabase.values().stream()
-                .filter(user -> user.getRole().equalsIgnoreCase(role))
+                .filter(user -> user.getUserType().equalsIgnoreCase(role))
                 .collect(java.util.stream.Collectors.toList());
     }
 
     public void persistPatientData() {
+        System.out.println("Saving patient data..."); // Debug log
         CSVWriterUtil.writeCSV(PATIENT_FILE, writer -> {
-            writer.write("ID,Name,Contact Info,Email,PasswordHash,FirstLogin\n");
+            writer.write("ID,Name,Password,DateOfBirth,Gender,BloodGroup,ContactInfo,Email,FirstLogin\n");
             for (User user : userDatabase.values()) {
-                if (user instanceof Patient) {
-                    Patient patient = (Patient) user;
-                    writer.write(String.format("%s,%s,%s,%s,%s,%b\n",
+                if (user instanceof Patient patient) {
+                    String record = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%b\n",
                             patient.getId(),
                             patient.getName(),
+                            patient.getPasswordHash(),
+                            patient.getDateOfBirth().format(DATE_FORMATTER),
+                            patient.getGender(),
+                            patient.getBloodGroup(),
                             patient.getContactInfo(),
                             patient.getEmail(),
-                            patient.getPasswordHash(),
-                            patient.isFirstLogin()));
+                            patient.isFirstLogin());
+                    writer.write(record);
+                    System.out.println("Saved patient: " + patient.getId()); // Debug log
                 }
             }
         });
@@ -162,24 +197,21 @@ public class UserController {
 
     private String createStaffRecord(User user) {
         try {
-            if (user instanceof Doctor) {
-                Doctor doctor = (Doctor) user;
+            if (user instanceof Doctor doctor) {
                 return String.format("%s,%s,Doctor,%s,%s,%d\n",
                         doctor.getId(),
                         doctor.getName(),
                         doctor.getSpecialty(),
                         doctor.getGender(),
                         doctor.getAge());
-            } else if (user instanceof Pharmacist) {
-                Pharmacist pharmacist = (Pharmacist) user;
+            } else if (user instanceof Pharmacist pharmacist) {
                 return String.format("%s,%s,Pharmacist,%s,%s,%d\n",
                         pharmacist.getId(),
                         pharmacist.getName(),
                         pharmacist.getLicenseNumber(),
                         pharmacist.getGender(),
                         pharmacist.getAge());
-            } else if (user instanceof Administrator) {
-                Administrator admin = (Administrator) user;
+            } else if (user instanceof Administrator admin) {
                 return String.format("%s,%s,Administrator,,%s,%d\n",
                         admin.getId(),
                         admin.getName(),
@@ -193,22 +225,21 @@ public class UserController {
     }
 
     public void persistStaffData() {
+        System.out.println("Saving staff data..."); // Debug log
         try {
             CSVWriterUtil.writeCSV(STAFF_FILE, writer -> {
-                // Write header
                 writer.write("ID,Name,Role,Specialty/License,Gender,Age\n");
 
-                // Write staff records
                 for (User user : userDatabase.values()) {
                     if (!(user instanceof Patient)) {
                         String record = createStaffRecord(user);
                         if (record != null) {
                             writer.write(record);
+                            System.out.println("Saved staff member: " + user.getId()); // Debug log
                         }
                     }
                 }
             });
-            System.out.println("Data successfully written to " + STAFF_FILE);
         } catch (Exception e) {
             System.err.println("Error persisting staff data: " + e.getMessage());
         }
@@ -219,10 +250,31 @@ public class UserController {
         persistStaffData();
     }
 
-    // Helper method to create a new staff member
     public User createNewStaff(String id, String name, String role, String password,
             String specialtyOrLicense, String gender, int age) {
+        if (id == null || name == null || role == null || password == null) {
+            throw new IllegalArgumentException("Required fields cannot be null");
+        }
         String hashedPassword = PasswordUtil.hashPassword(password);
-        return createStaffUser(id, name, role, specialtyOrLicense, gender, age, hashedPassword, true);
+        User newUser = createStaffUser(id, name, role, specialtyOrLicense, gender, age, 
+                                     hashedPassword, true);
+        if (newUser != null) {
+            addUser(newUser);
+            persistStaffData();
+        }
+        return newUser;
+    }
+
+    public Patient createNewPatient(String id, String name, String password, LocalDate dob,
+            String gender, String bloodGroup, String contactInfo, String email) {
+        if (id == null || name == null || password == null || dob == null) {
+            throw new IllegalArgumentException("Required fields cannot be null");
+        }
+        String hashedPassword = PasswordUtil.hashPassword(password);
+        Patient newPatient = new Patient(id, name, hashedPassword, dob, gender, bloodGroup, 
+                                       contactInfo, email);
+        addUser(newPatient);
+        persistPatientData();
+        return newPatient;
     }
 }

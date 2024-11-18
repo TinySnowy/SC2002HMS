@@ -21,6 +21,13 @@ public abstract class User {
         this.isFirstLogin = isFirstLogin;
     }
 
+    public User(String id, String name, String password, String role) {
+        this.id = id;
+        this.name = name;
+        this.passwordHash = PasswordUtil.hashPassword(password);
+        this.role = role;
+    }
+
     public String getId() {
         return id;
     }
@@ -60,4 +67,6 @@ public abstract class User {
     public void setFirstLogin(boolean firstLogin) {
         this.isFirstLogin = firstLogin;
     }
+
+    public abstract String getUserType();
 }
