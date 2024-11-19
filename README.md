@@ -78,3 +78,6 @@ The project application was designed using **Object-Oriented Programming (OOP)**
 - **Enhanced Usability**: A robust, user-friendly interface ensures smooth operations for end-users.
 
 
+## UML Class Diagram
+<img src="/Users/grishaa/Desktop/UML.jpg" alt="UML Class Diagram" width="500">
+
