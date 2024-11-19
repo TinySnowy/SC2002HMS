@@ -73,4 +73,15 @@ public class Prescription {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String toCSVString() {
+        return String.format("%s,%s,%s,%s,%d,%s",
+            prescriptionId,
+            patient.getId(),
+            patient.getDoctor().getId(),
+            medicationName,
+            quantity,
+            dosage
+        );
+    }
 }

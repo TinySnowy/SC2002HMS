@@ -8,13 +8,10 @@ import appointment_management.Appointment;
 import pharmacy_management.appointments.AppointmentOutcome;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.prescriptions.Prescription;
-import user_management.UserController;
 import doctor_management.services.ScheduleManagerImpl.ScheduleEntry;
-import doctor_management.services.MedicalRecordManagerImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DoctorManagementFacade {
     private final IMedicalRecordManager medicalRecordManager;
@@ -22,7 +19,7 @@ public class DoctorManagementFacade {
     private final IScheduleManager scheduleManager;
     private final AppointmentList appointmentList;
 
-      public DoctorManagementFacade(MedicalRecordController recordController,
+    public DoctorManagementFacade(MedicalRecordController recordController,
             AppointmentList appointmentList,
             IAppointmentOutcomeService outcomeService) {
         this.appointmentList = appointmentList;
@@ -55,6 +52,27 @@ public class DoctorManagementFacade {
         }
     }
 
+    // Schedule Management
+    public void setDoctorAvailability(String doctorId, List<ScheduleEntry> scheduleEntries) {
+        scheduleManager.setAvailability(doctorId, scheduleEntries);
+    }
+
+    public List<ScheduleEntry> getDoctorAvailability(String doctorId) {
+        return scheduleManager.getAvailability(doctorId);
+    }
+
+    public boolean isDoctorAvailable(String doctorId, LocalDateTime dateTime) {
+        return scheduleManager.isAvailable(doctorId, dateTime);
+    }
+
+    public boolean validateTimeFormat(String time) {
+        return scheduleManager.validateTimeSlot(time);
+    }
+
+    public boolean validateDateFormat(String date) {
+        return scheduleManager.validateDate(date);
+    }
+
     // Appointment Management
     public List<Appointment> viewPendingAppointments(String doctorId) {
         return appointmentManager.viewPendingAppointments(doctorId);
@@ -84,29 +102,6 @@ public class DoctorManagementFacade {
     }
 
     public List<Appointment> getUpcomingAppointments(String doctorId) {
-        return appointmentList.getAppointmentsByDoctor(doctorId).stream()
-                .filter(apt -> apt.getAppointmentDate().isAfter(LocalDateTime.now()))
-                .collect(Collectors.toList());
-    }
-
-    // Schedule Management with new methods
-    public void setDoctorAvailability(String doctorId, List<ScheduleEntry> scheduleEntries) {
-        scheduleManager.setAvailability(doctorId, scheduleEntries);
-    }
-
-    public List<ScheduleEntry> getDoctorAvailability(String doctorId) {
-        return scheduleManager.getAvailability(doctorId);
-    }
-
-    public boolean isDoctorAvailable(String doctorId, LocalDateTime dateTime) {
-        return scheduleManager.isAvailable(doctorId, dateTime);
-    }
-
-    public boolean validateTimeFormat(String time) {
-        return scheduleManager.validateTimeSlot(time);
-    }
-
-    public boolean validateDateFormat(String date) {
-        return scheduleManager.validateDate(date);
+        return appointmentManager.getUpcomingAppointments(doctorId);
     }
 }

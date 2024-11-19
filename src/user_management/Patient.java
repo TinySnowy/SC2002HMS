@@ -9,6 +9,7 @@ public class Patient extends User {
     private String bloodGroup;
     private String contactInfo;
     private String email;
+    private Doctor doctor;
 
     public Patient(String id, String name, String password, LocalDate dateOfBirth, 
                   String gender, String bloodGroup, String contactInfo, String email) {
@@ -58,6 +59,14 @@ public class Patient extends User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Doctor getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
     @Override

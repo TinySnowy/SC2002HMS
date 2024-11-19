@@ -1,0 +1,3 @@
+AppointmentId,PatientId,DoctorId,Date,ServiceType,Notes,Prescriptions
+A1732017530964,P1001,D001,2024-11-25 14:00,consult,fever,A1732017530964-0|crocin|600mg|4
+A1732011882686,P1001,D001,2024-11-25 14:30,Consultation and Blood Test,Low Haemoglobin,

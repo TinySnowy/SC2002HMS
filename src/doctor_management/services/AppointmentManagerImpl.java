@@ -6,9 +6,11 @@ import appointment_management.AppointmentList;
 import pharmacy_management.appointments.AppointmentOutcome;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.prescriptions.Prescription;
+import utils.CSVWriterUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class AppointmentManagerImpl implements IAppointmentManager {
@@ -22,74 +24,107 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         }
         this.appointmentList = appointmentList;
         this.outcomeService = outcomeService;
-        System.out.println("AppointmentManagerImpl initialized"); // Debug log
+        System.out.println("AppointmentManagerImpl initialized");
     }
 
     @Override
     public List<Appointment> viewPendingAppointments(String doctorId) {
         if (doctorId == null || doctorId.trim().isEmpty()) {
             System.out.println("Invalid doctor ID provided");
-            return List.of();
+            return new ArrayList<>();
         }
 
         System.out.println("Fetching pending appointments for doctor: " + doctorId);
         
-        List<Appointment> allAppointments = appointmentList.getAllAppointments();
-        System.out.println("Total appointments found: " + allAppointments.size());
+        List<Appointment> allAppointments = appointmentList.getAppointmentsByDoctor(doctorId);
+        System.out.println("Total appointments found for doctor: " + allAppointments.size());
+        
+        LocalDateTime now = LocalDateTime.now();
 
         List<Appointment> pendingAppointments = allAppointments.stream()
-            .filter(a -> {
-                if (a == null) {
+            .filter(appointment -> {
+                if (appointment == null || appointment.getDoctor() == null) {
+                    System.out.println("Found null appointment or doctor");
+                    return false;
+                }
+
+                if (appointment.getAppointmentDate() == null) {
+                    System.out.println("Appointment " + appointment.getAppointmentId() + " has null date");
+                    return false;
+                }
+
+                boolean isPending = "Pending".equalsIgnoreCase(appointment.getStatus());
+                boolean isFuture = appointment.getAppointmentDate().isAfter(now);
+
+                System.out.println("Appointment " + appointment.getAppointmentId() + 
+                                 " [Status: " + appointment.getStatus() + 
+                                 ", Date: " + appointment.getAppointmentDate() + "]");
+
+                return isPending && isFuture;
+            })
+            .sorted((a1, a2) -> a1.getAppointmentDate().compareTo(a2.getAppointmentDate()))
+            .collect(Collectors.toList());
+
+        System.out.println("Found " + pendingAppointments.size() + " pending appointments");
+        return pendingAppointments;
+    }
+
+    @Override
+    public List<Appointment> getUpcomingAppointments(String doctorId) {
+        if (doctorId == null || doctorId.trim().isEmpty()) {
+            System.out.println("Invalid doctor ID provided");
+            return new ArrayList<>();
+        }
+
+       
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Appointment> doctorAppointments = appointmentList.getUpcomingAppointments(doctorId);
+       
+
+        List<Appointment> upcomingAppointments = doctorAppointments.stream()
+            .filter(appointment -> {
+                if (appointment == null) {
                     System.out.println("Found null appointment entry");
                     return false;
                 }
                 
-                if (a.getDoctor() == null) {
-                    System.out.println("Appointment " + a.getAppointmentId() + " has no doctor assigned");
+                if (appointment.getAppointmentDate() == null) {
+                    System.out.println("Appointment " + appointment.getAppointmentId() + " has null date");
                     return false;
                 }
 
-                boolean isDoctor = a.getDoctor().getId().equals(doctorId);
-                boolean isPending = "Pending".equalsIgnoreCase(a.getStatus());
-                boolean isFuture = a.getAppointmentDate().isAfter(LocalDateTime.now());
-
-                System.out.println("Checking appointment: " + a.getAppointmentId() + 
-                                 " [Doctor Match: " + isDoctor + 
-                                 ", Status: " + a.getStatus() + 
-                                 ", Is Future: " + isFuture + "]");
-
-                return isDoctor && isPending && isFuture;
+                boolean isConfirmed = "Confirmed".equalsIgnoreCase(appointment.getStatus());
+                boolean isFuture = appointment.getAppointmentDate().isAfter(now);
+                
+                
+                
+                return isConfirmed && isFuture;
             })
+            .sorted((a1, a2) -> a1.getAppointmentDate().compareTo(a2.getAppointmentDate()))
             .collect(Collectors.toList());
 
-        System.out.println("Found " + pendingAppointments.size() + " pending appointments");
-        pendingAppointments.forEach(a -> 
-            System.out.println("Pending appointment: " + a.getAppointmentId() + 
-                             " at " + a.getAppointmentDate()));
-        return pendingAppointments;
+        System.out.println("Found " + upcomingAppointments.size() + " upcoming confirmed appointments");
+        return upcomingAppointments;
     }
 
     @Override
     public void acceptAppointment(String appointmentId) {
         if (appointmentId == null || appointmentId.trim().isEmpty()) {
-            System.out.println("Invalid appointment ID provided");
-            return;
+            throw new IllegalArgumentException("Invalid appointment ID");
         }
 
         System.out.println("Attempting to accept appointment: " + appointmentId);
         Appointment appointment = appointmentList.getAppointmentById(appointmentId);
         
         if (appointment == null) {
-            System.out.println("Appointment not found: " + appointmentId);
-            return;
+            throw new IllegalArgumentException("Appointment not found: " + appointmentId);
         }
 
         if (!"Pending".equalsIgnoreCase(appointment.getStatus())) {
-            System.out.println("Cannot accept appointment with status: " + appointment.getStatus());
-            return;
+            throw new IllegalStateException("Cannot accept appointment with status: " + appointment.getStatus());
         }
 
-        System.out.println("Current status: " + appointment.getStatus());
         appointment.confirm();
         appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
         System.out.println("Appointment accepted successfully. New status: " + appointment.getStatus());
@@ -98,143 +133,102 @@ public class AppointmentManagerImpl implements IAppointmentManager {
     @Override
     public void declineAppointment(String appointmentId) {
         if (appointmentId == null || appointmentId.trim().isEmpty()) {
-            System.out.println("Invalid appointment ID provided");
-            return;
+            throw new IllegalArgumentException("Invalid appointment ID");
         }
 
         System.out.println("Attempting to decline appointment: " + appointmentId);
         Appointment appointment = appointmentList.getAppointmentById(appointmentId);
         
         if (appointment == null) {
-            System.out.println("Appointment not found: " + appointmentId);
-            return;
+            throw new IllegalArgumentException("Appointment not found: " + appointmentId);
         }
 
         if (!"Pending".equalsIgnoreCase(appointment.getStatus())) {
-            System.out.println("Cannot decline appointment with status: " + appointment.getStatus());
-            return;
+            throw new IllegalStateException("Cannot decline appointment with status: " + appointment.getStatus());
         }
 
-        System.out.println("Current status: " + appointment.getStatus());
         appointment.decline();
         appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
         System.out.println("Appointment declined successfully. New status: " + appointment.getStatus());
     }
 
     @Override
-    public List<Appointment> getUpcomingAppointments(String doctorId) {
-        if (doctorId == null || doctorId.trim().isEmpty()) {
-            System.out.println("Invalid doctor ID provided");
-            return List.of();
-        }
-
-        System.out.println("Fetching upcoming appointments for doctor: " + doctorId);
-        LocalDateTime now = LocalDateTime.now();
-        
-        List<Appointment> appointments = appointmentList.getAllAppointments().stream()
-            .filter(a -> {
-                if (a == null || a.getDoctor() == null) {
-                    return false;
-                }
-                
-                boolean isDoctor = a.getDoctor().getId().equals(doctorId);
-                boolean isConfirmed = "Confirmed".equalsIgnoreCase(a.getStatus());
-                boolean isFuture = a.getAppointmentDate().isAfter(now);
-                
-                System.out.println("Checking appointment: " + a.getAppointmentId() + 
-                                 " [IsDoctor: " + isDoctor + 
-                                 ", Status: " + a.getStatus() + 
-                                 ", IsFuture: " + isFuture + "]");
-                
-                return isDoctor && isConfirmed && isFuture;
-            })
-            .sorted((a1, a2) -> a1.getAppointmentDate().compareTo(a2.getAppointmentDate()))
-            .collect(Collectors.toList());
-
-        System.out.println("Found " + appointments.size() + " upcoming appointments");
-        return appointments;
+public AppointmentOutcome recordAppointmentOutcome(String appointmentId,
+        String serviceType,
+        String consultationNotes,
+        List<Prescription> prescriptions) {
+    if (appointmentId == null || appointmentId.trim().isEmpty()) {
+        throw new IllegalArgumentException("Invalid appointment ID");
     }
 
-    @Override
-    public AppointmentOutcome recordAppointmentOutcome(String appointmentId,
-            String serviceType,
-            String consultationNotes,
-            List<Prescription> prescriptions) {
-        if (appointmentId == null || appointmentId.trim().isEmpty()) {
-            System.out.println("Invalid appointment ID provided");
-            return null;
-        }
-
-        System.out.println("Recording outcome for appointment: " + appointmentId);
-        Appointment appointment = appointmentList.getAppointmentById(appointmentId);
-        
-        if (appointment == null) {
-            System.out.println("Appointment not found");
-            return null;
-        }
-
-        if (!"Confirmed".equalsIgnoreCase(appointment.getStatus())) {
-            System.out.println("Cannot record outcome for appointment with status: " + 
-                             appointment.getStatus());
-            return null;
-        }
-
-        try {
-            // Update appointment
-            appointment.setOutcome(serviceType, consultationNotes, prescriptions);
-            appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
-
-            // Create outcome
-            AppointmentOutcome outcome = new AppointmentOutcome(
-                appointmentId,
-                appointment.getPatient().getId(),
-                appointment.getDoctor().getId(),
-                appointment.getAppointmentDate(),
-                serviceType,
-                consultationNotes);
-
-            // Add prescriptions
-            if (prescriptions != null) {
-                prescriptions.forEach(p -> {
-                    if (p != null) {
-                        outcome.addPrescription(p);
-                    }
-                });
-            }
-
-            // Save outcome
-            if (outcomeService.saveAppointmentOutcome(outcome)) {
-                System.out.println("Appointment outcome recorded successfully");
-                return outcome;
-            } else {
-                System.out.println("Failed to save appointment outcome");
-                return null;
-            }
-        } catch (Exception e) {
-            System.err.println("Error recording outcome: " + e.getMessage());
-            return null;
-        }
+    System.out.println("Recording outcome for appointment: " + appointmentId);
+    Appointment appointment = appointmentList.getAppointmentById(appointmentId);
+    
+    if (appointment == null) {
+        throw new IllegalArgumentException("Appointment not found");
     }
+
+    if (!"Confirmed".equalsIgnoreCase(appointment.getStatus())) {
+        throw new IllegalStateException("Cannot record outcome for appointment with status: " + 
+                                      appointment.getStatus());
+    }
+
+    // Set the outcome first
+    appointment.setOutcome(serviceType, consultationNotes, prescriptions);
+    appointment.setStatus("Completed");
+    
+    // Create the appointment outcome
+    AppointmentOutcome outcome = new AppointmentOutcome(
+        appointmentId,
+        appointment.getPatient().getId(),
+        appointment.getDoctor().getId(),
+        appointment.getAppointmentDate(),
+        serviceType,
+        consultationNotes);
+
+    // Add prescriptions to the outcome
+    if (prescriptions != null) {
+        prescriptions.forEach(p -> {
+            if (p != null) {
+                outcome.addPrescription(p);
+            }
+        });
+    }
+
+    // Save prescriptions only once using appointmentList
+    if (prescriptions != null && !prescriptions.isEmpty()) {
+        appointmentList.savePrescriptionsToCSV("SC2002HMS/data/Prescriptions.csv", prescriptions);
+    }
+
+    // Save the updated appointment
+    appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
+
+    // Save the outcome
+    if (!outcomeService.saveAppointmentOutcome(outcome)) {
+        throw new RuntimeException("Failed to save appointment outcome");
+    }
+
+    System.out.println("Appointment outcome recorded successfully");
+    return outcome;
+}
 
     @Override
     public List<AppointmentOutcome> getCompletedAppointmentOutcomes(String doctorId) {
         if (doctorId == null || doctorId.trim().isEmpty()) {
             System.out.println("Invalid doctor ID provided");
-            return List.of();
+            return new ArrayList<>();
         }
 
         System.out.println("Fetching completed appointment outcomes for doctor: " + doctorId);
         
-        List<AppointmentOutcome> outcomes = appointmentList.getAllAppointments().stream()
+        List<AppointmentOutcome> outcomes = appointmentList.getAppointmentsByDoctor(doctorId).stream()
             .filter(a -> a != null && 
                         a.getDoctor() != null && 
-                        a.getDoctor().getId().equals(doctorId) &&
                         "Completed".equalsIgnoreCase(a.getStatus()))
             .map(a -> {
                 AppointmentOutcome outcome = outcomeService.getOutcomeByAppointmentId(a.getAppointmentId());
                 if (outcome == null) {
-                    System.out.println("No outcome found for completed appointment: " + 
-                                     a.getAppointmentId());
+                    System.out.println("No outcome found for completed appointment: " + a.getAppointmentId());
                 }
                 return outcome;
             })

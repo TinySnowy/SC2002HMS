@@ -127,7 +127,7 @@ public class DoctorDashboard implements AutoCloseable {
         if (!scheduleEntries.isEmpty()) {
             doctorManager.setDoctorAvailability(doctor.getId(), scheduleEntries);
             System.out.println("\nAvailability updated successfully!");
-            displayCurrentSchedule(scheduleEntries);
+            displayAvailableTimeSlots(scheduleEntries);
         } else {
             System.out.println("\nNo availability set.");
         }
@@ -194,61 +194,102 @@ public class DoctorDashboard implements AutoCloseable {
             return false;
         }
     }
-
     private void viewPersonalSchedule() {
-        System.out.println("\nCurrent Schedule:");
-        System.out.println("----------------------------------------");
-        
-        // Get both availability and confirmed appointments
-        List<ScheduleEntry> schedule = doctorManager.getDoctorAvailability(doctor.getId());
-        List<Appointment> appointments = doctorManager.getUpcomingAppointments(doctor.getId());
-        
-        if (schedule.isEmpty() && appointments.isEmpty()) {
-            System.out.println("No availability or appointments set.");
-        } else {
-            // Display availability
-            if (!schedule.isEmpty()) {
-                System.out.println("\nAvailable Time Slots:");
-                displayCurrentSchedule(schedule);
-            }
-            
-            // Display confirmed appointments
-            if (!appointments.isEmpty()) {
-                System.out.println("\nConfirmed Appointments:");
-                appointments.stream()
-                    .sorted(Comparator.comparing(Appointment::getAppointmentDate))
-                    .forEach(apt -> System.out.printf("  %s - Patient: %s (ID: %s)\n",
-                        apt.getAppointmentDate().format(DATETIME_FORMATTER),
-                        apt.getPatient().getName(),
-                        apt.getPatient().getId()));
-            }
-        }
-        System.out.println("----------------------------------------");
+        System.out.println("\nDoctor's Schedule - Dr. " + doctor.getName());
+        System.out.println("============================================");
+
+        // Get both upcoming appointments and availability
+        List<Appointment> upcomingAppointments = doctorManager.getUpcomingAppointments(doctor.getId());
+        List<ScheduleEntry> availableSlots = doctorManager.getDoctorAvailability(doctor.getId());
+
+        // Display Upcoming Appointments Section
+        displayUpcomingAppointments(upcomingAppointments);
+
+        // Display Available Time Slots Section
+        displayAvailableTimeSlots(availableSlots);
+
+        System.out.println("============================================");
     }
 
-    private void displayCurrentSchedule(List<ScheduleEntry> schedule) {
-        // Sort schedule entries by date
-        schedule.sort(Comparator.comparing(ScheduleEntry::getDate));
+    private void displayUpcomingAppointments(List<Appointment> appointments) {
+        System.out.println("\nUPCOMING APPOINTMENTS");
+        System.out.println("--------------------------------------------");
         
-        LocalDate currentDate = null;
-        for (ScheduleEntry entry : schedule) {
-            LocalDate entryDate = entry.getDate();
-            
-            // Print date header if it's a new date
-            if (!entryDate.equals(currentDate)) {
-                System.out.printf("\n%s (%s):\n", 
-                    entryDate.format(DateTimeFormatter.ofPattern("EEEE")),
-                    entryDate.format(DATE_FORMATTER));
-                currentDate = entryDate;
-            }
-            
-            // Print time slot
-            TimeSlot timeSlot = entry.getTimeSlot();
-            System.out.printf("  %s-%s\n", 
-                timeSlot.getStartTime(),
-                timeSlot.getEndTime());
+        if (appointments.isEmpty()) {
+            System.out.println("No upcoming appointments scheduled.");
+            return;
         }
+
+        // Group appointments by date
+        Map<LocalDate, List<Appointment>> appointmentsByDate = new TreeMap<>();
+        appointments.forEach(apt -> {
+            LocalDate date = apt.getAppointmentDate().toLocalDate();
+            appointmentsByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(apt);
+        });
+
+        // Display appointments grouped by date
+        appointmentsByDate.forEach((date, dateAppointments) -> {
+            System.out.printf("\n%s (%s):\n", 
+                date.format(DateTimeFormatter.ofPattern("EEEE")),
+                date.format(DATE_FORMATTER));
+
+            dateAppointments.stream()
+                .sorted(Comparator.comparing(Appointment::getAppointmentDate))
+                .forEach(apt -> {
+                    System.out.printf("  Time: %s\n", 
+                        apt.getAppointmentDate().format(TIME_FORMATTER));
+                    System.out.printf("  Patient: %s (ID: %s)\n", 
+                        apt.getPatient().getName(),
+                        apt.getPatient().getId());
+                    System.out.printf("  Appointment ID: %s\n", 
+                        apt.getAppointmentId());
+                    System.out.println("  --------------------");
+                });
+        });
     }
+
+    private void displayAvailableTimeSlots(List<ScheduleEntry> schedule) {
+        System.out.println("\nAVAILABLE TIME SLOTS");
+        System.out.println("--------------------------------------------");
+
+        if (schedule.isEmpty()) {
+            System.out.println("No availability set for future dates.");
+            return;
+        }
+
+        // Sort schedule entries by date and time
+        schedule.sort((e1, e2) -> {
+            int dateCompare = e1.getDate().compareTo(e2.getDate());
+            if (dateCompare == 0) {
+                return e1.getTimeSlot().getStartTime().compareTo(e2.getTimeSlot().getEndTime());
+            }
+            return dateCompare;
+        });
+
+        // Group time slots by date
+        Map<LocalDate, List<TimeSlot>> slotsByDate = new TreeMap<>();
+        schedule.forEach(entry -> {
+            if (!entry.getDate().isBefore(LocalDate.now())) {
+                slotsByDate.computeIfAbsent(entry.getDate(), k -> new ArrayList<>())
+                    .add(entry.getTimeSlot());
+            }
+        });
+
+        // Display time slots grouped by date
+        slotsByDate.forEach((date, timeSlots) -> {
+            System.out.printf("\n%s (%s):\n",
+                date.format(DateTimeFormatter.ofPattern("EEEE")),
+                date.format(DATE_FORMATTER));
+
+            timeSlots.stream()
+                .sorted(Comparator.comparing(TimeSlot::getStartTime))
+                .forEach(slot -> 
+                    System.out.printf("  %s - %s\n",
+                        slot.getStartTime(),
+                        slot.getEndTime()));
+        });
+    }
+
 
     private void viewPatientMedicalRecord() {
         System.out.print("Enter Patient ID (or 'back' to return): ");
