@@ -9,20 +9,59 @@ import java.util.List;
 import java.util.Map;
 import pharmacy_management.prescriptions.Prescription;
 
+/**
+ * Manages pharmacy inventory operations in the HMS.
+ * Handles:
+ * - Stock tracking by expiry date
+ * - Low stock monitoring
+ * - Inventory replenishment
+ * - Medication dispensing
+ * - CSV data persistence
+ * Provides centralized control of medication inventory.
+ */
 public class InventoryManager {
+    /** Shared inventory mapping medication names to stock by expiry date */
     private static Map<String, Map<String, Integer>> sharedInventory = new HashMap<>();
+    
+    /** Threshold levels for low stock alerts by medication */
     private static Map<String, Integer> sharedLowStockThresholds = new HashMap<>();
+    
+    /** Active prescriptions in the system */
     private final Map<String, Prescription> prescriptions;
+    
+    /** Service for handling inventory replenishment */
     private final IReplenishmentService replenishmentService;
+    
+    /** ID of pharmacist managing inventory */
     private final String pharmacistId;
+    
+    /** File path for medication data storage */
     private static final String MEDICINE_FILE = "SC2002HMS/data/Medicine_List.csv";
 
+    /**
+     * Initializes inventory manager with required services.
+     * Sets up data structures and links dependencies.
+     * 
+     * @param replenishmentService Service for stock replenishment
+     * @param pharmacistId ID of managing pharmacist
+     */
     public InventoryManager(IReplenishmentService replenishmentService, String pharmacistId) {
         this.prescriptions = new HashMap<>();
         this.replenishmentService = replenishmentService;
         this.pharmacistId = pharmacistId;
     }
 
+    /**
+     * Loads inventory data from CSV file.
+     * Processes:
+     * - Medication names
+     * - Stock levels
+     * - Thresholds
+     * - Expiry dates
+     * Handles file reading and parsing errors.
+     * 
+     * @param filePath Path to inventory CSV file
+     */
     public void loadInventoryFromCSV(String filePath) {
         try {
             List<String[]> records = CSVReaderUtil.readCSV(filePath);
@@ -52,6 +91,15 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Adds new medication stock to inventory.
+     * Updates stock levels and checks thresholds.
+     * Manages expiry date tracking.
+     * 
+     * @param medicationName Name of medication
+     * @param quantity Amount to add
+     * @param expiryDate Expiration date of stock
+     */
     public void addMedication(String medicationName, int quantity, String expiryDate) {
         sharedInventory.putIfAbsent(medicationName, new HashMap<>());
         Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
@@ -60,6 +108,13 @@ public class InventoryManager {
         saveMedicineListToCSV();
     }
 
+    /**
+     * Updates low stock threshold for medication.
+     * Manages alert levels and updates CSV storage.
+     * 
+     * @param medicationName Target medication
+     * @param newThreshold New threshold value
+     */
     public void setLowStockThreshold(String medicationName, int newThreshold) {
         try {
             List<String[]> records = CSVReaderUtil.readCSV(MEDICINE_FILE);
@@ -88,6 +143,13 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Saves current inventory state to CSV.
+     * Handles:
+     * - Data formatting
+     * - File writing
+     * - Error recovery
+     */
     public void saveMedicineListToCSV() {
         try {
             CSVWriterUtil.writeCSV(MEDICINE_FILE, writer -> {
@@ -111,6 +173,14 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Displays current inventory status.
+     * Shows:
+     * - Medication names
+     * - Stock levels
+     * - Expiry dates
+     * Handles empty inventory case.
+     */
     public void checkInventory() {
         if (sharedInventory.isEmpty()) {
             System.out.println("Inventory is empty!");
@@ -126,6 +196,11 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Checks all medications for low stock.
+     * Generates alerts for items below threshold.
+     * Used for inventory management.
+     */
     public void checkAllLowStock() {
         System.out.println("\nLow Stock Alerts:");
         for (String medicationName : sharedInventory.keySet()) {
@@ -133,6 +208,12 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Checks specific medication for low stock.
+     * Compares total stock against threshold.
+     * 
+     * @param medicationName Medication to check
+     */
     public void checkLowStock(String medicationName) {
         Map<String, Integer> stockByDate = sharedInventory.get(medicationName);
         if (stockByDate != null) {
@@ -145,6 +226,14 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Requests inventory replenishment.
+     * Creates and tracks replenishment orders.
+     * 
+     * @param medicationName Medication to reorder
+     * @param quantity Amount to request
+     * @param expiryDate Expected expiry date
+     */
     public void requestRefill(String medicationName, int quantity, String expiryDate) {
         if (!sharedInventory.containsKey(medicationName)) {
             System.out.println("Error: Medication not found in inventory.");
@@ -161,6 +250,17 @@ public class InventoryManager {
         }
     }
 
+    /**
+     * Dispenses medication from inventory.
+     * Manages:
+     * - Stock reduction
+     * - Expiry date tracking
+     * - Low stock alerts
+     * 
+     * @param medicationName Medication to dispense
+     * @param quantity Amount to dispense
+     * @return true if dispensed successfully
+     */
     public boolean dispenseMedication(String medicationName, int quantity) {
         if (!sharedInventory.containsKey(medicationName)) {
             System.out.println("Medication not available in inventory.");
@@ -188,10 +288,23 @@ public class InventoryManager {
         return false;
     }
 
+    /**
+     * Retrieves prescription by ID.
+     * Used for prescription validation.
+     * 
+     * @param prescriptionId ID to look up
+     * @return Associated prescription or null
+     */
     public Prescription getPrescriptionById(String prescriptionId) {
         return prescriptions.get(prescriptionId);
     }
 
+    /**
+     * Adds new prescription to system.
+     * Validates patient information.
+     * 
+     * @param prescription New prescription to add
+     */
     public void addPrescription(Prescription prescription) {
         if (prescription.getPatient() == null) {
             System.err.println("Cannot add prescription with null patient.");

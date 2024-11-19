@@ -2,9 +2,16 @@ package admin_management.utils;
 
 import java.util.Scanner;
 
+/**
+ * Utility class for validating and sanitizing user input in the hospital management system.
+ * Provides comprehensive validation for staff-related data including personal information,
+ * credentials, and professional details. Ensures data integrity and format consistency.
+ */
 public class InputValidator {
     /**
-     * Gets validated integer input within a specified range
+     * Gets validated integer input within a specified range.
+     * Continuously prompts user until valid input is received.
+     * Handles number format exceptions and range validation.
      */
     public int getValidatedInput(Scanner scanner, String prompt, int min, int max) {
         while (true) {
@@ -22,8 +29,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates staff name
-     * @throws IllegalArgumentException if name is null or empty
+     * Validates staff name.
+     * Ensures name is not null or empty.
+     * Trims whitespace from input.
+     * Used for staff registration and updates.
      */
     public String validateName(String name) {
         if (name == null || name.trim().isEmpty()) {
@@ -33,8 +42,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates gender input
-     * @throws IllegalArgumentException if gender is not 'M' or 'F'
+     * Validates gender input.
+     * Accepts 'M' or 'F' (case-insensitive).
+     * Standardizes output to uppercase.
+     * Critical for maintaining consistent gender records.
      */
     public String validateGender(String gender) {
         if (gender == null) {
@@ -49,8 +60,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates age within the range 18-100
-     * @throws IllegalArgumentException if age is outside valid range
+     * Validates staff member age.
+     * Ensures age is between 18 and 100.
+     * Used for staff registration and updates.
+     * Maintains reasonable age restrictions for employment.
      */
     public int validateAge(int age) {
         if (age < 18 || age > 100) {
@@ -60,8 +73,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates password
-     * @throws IllegalArgumentException if password is null or empty
+     * Validates password.
+     * Currently only checks for non-empty input.
+     * Could be extended for password strength requirements.
+     * Used in authentication and account creation.
      */
     public String validatePassword(String password) {
         if (password == null || password.trim().isEmpty()) {
@@ -71,8 +86,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates staff ID format
-     * @throws IllegalArgumentException if ID is invalid
+     * Validates staff ID format.
+     * Ensures ID follows pattern: [D/P/A][numbers]
+     * D for Doctor, P for Pharmacist, A for Admin
+     * Critical for staff identification and role assignment.
      */
     public String validateStaffId(String staffId) {
         if (staffId == null || staffId.trim().isEmpty()) {
@@ -99,8 +116,10 @@ public class InputValidator {
     }
 
     /**
-     * Validates specialty or license number
-     * @throws IllegalArgumentException if value is null or empty
+     * Validates specialty or license information.
+     * Used for doctor specialties and pharmacist licenses.
+     * Ensures professional credentials are properly recorded.
+     * Generic validation for both types to maintain code reuse.
      */
     public String validateSpecialtyOrLicense(String value, String type) {
         if (value == null || value.trim().isEmpty()) {

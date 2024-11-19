@@ -10,14 +10,33 @@ import java.util.*;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
+/**
+ * Handles the viewing and reporting of feedback in the hospital management system.
+ * Provides functionality to view feedback summaries, generate reports, and analyze
+ * feedback data for both overall hospital performance and individual doctors.
+ */
 public class AdminFeedbackViewer {
+    /** Service for managing feedback operations */
     private final FeedbackService feedbackService;
+    /** List of appointments for reference */
     private final AppointmentList appointmentList;
+    /** Controller for user-related operations */
     private final UserController userController;
+    /** Scanner for reading user input */
     private final Scanner scanner;
+    
+    /** Formatter for displaying dates in a consistent format */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    /** Base path for storing feedback reports */
     private static final String REPORT_PATH = "SC2002HMS/reports/feedback/";
 
+    /**
+     * Constructs an AdminFeedbackViewer with necessary services and controllers.
+     * Creates the report directory if it doesn't exist.
+     * @param feedbackService Service for feedback operations
+     * @param appointmentList List of appointments
+     * @param userController Controller for user operations
+     */
     public AdminFeedbackViewer(FeedbackService feedbackService, AppointmentList appointmentList, UserController userController) {
         this.feedbackService = feedbackService;
         this.appointmentList = appointmentList;
@@ -26,6 +45,9 @@ public class AdminFeedbackViewer {
         createReportDirectory();
     }
 
+    /**
+     * Creates the directory for storing feedback reports if it doesn't exist.
+     */
     private void createReportDirectory() {
         File directory = new File(REPORT_PATH);
         if (!directory.exists()) {
@@ -33,6 +55,10 @@ public class AdminFeedbackViewer {
         }
     }
 
+    /**
+     * Displays an overall summary of all feedback in the system.
+     * Shows average ratings and rating distribution.
+     */
     public void viewOverallSummary() {
         System.out.println("\nOverall Feedback Summary");
         System.out.println("----------------------------------------");
@@ -47,6 +73,10 @@ public class AdminFeedbackViewer {
         pressEnterToContinue();
     }
 
+    /**
+     * Allows viewing feedback filtered by specific doctors.
+     * Displays a list of doctors and their individual feedback.
+     */
     public void viewFeedbackByDoctor() {
         List<Doctor> doctors = userController.getAllDoctors();
         if (doctors.isEmpty()) {
@@ -61,6 +91,10 @@ public class AdminFeedbackViewer {
         }
     }
 
+    /**
+     * Displays the most recent feedback entries.
+     * Shows the last 10 feedback entries by default.
+     */
     public void viewRecentFeedback() {
         System.out.println("\nRecent Feedback");
         System.out.println("----------------------------------------");
@@ -68,6 +102,10 @@ public class AdminFeedbackViewer {
         pressEnterToContinue();
     }
 
+    /**
+     * Generates feedback reports in various formats.
+     * Provides options for overall hospital reports or doctor-specific reports.
+     */
     public void generateFeedbackReport() {
         System.out.println("\nGenerate Feedback Report");
         System.out.println("----------------------------------------");
@@ -88,6 +126,11 @@ public class AdminFeedbackViewer {
         }
     }
 
+    /**
+     * Displays detailed feedback for a specific doctor.
+     * Shows average rating, total reviews, and individual feedback entries.
+     * @param doctor The doctor whose feedback to display
+     */
     public void displayDoctorFeedback(Doctor doctor) {
         System.out.printf("\nFeedback for Dr. %s (%s)\n", doctor.getName(), doctor.getSpecialty());
         System.out.println("----------------------------------------");
@@ -119,6 +162,10 @@ public class AdminFeedbackViewer {
         pressEnterToContinue();
     }
 
+    /**
+     * Generates a comprehensive report of overall hospital feedback.
+     * Includes statistics, doctor-wise analysis, and recent feedback.
+     */
     private void generateOverallReport() {
         List<AppointmentFeedback> allFeedback = feedbackService.getAllFeedback();
         if (allFeedback.isEmpty()) {
@@ -145,6 +192,10 @@ public class AdminFeedbackViewer {
         }
     }
 
+    /**
+     * Generates a detailed report for a specific doctor's feedback.
+     * Includes rating distribution and all feedback entries.
+     */
     private void generateDoctorReport() {
         List<Doctor> doctors = userController.getAllDoctors();
         displayDoctorList(doctors);
@@ -177,6 +228,11 @@ public class AdminFeedbackViewer {
         }
     }
 
+    /**
+     * Writes overall statistics to the report file.
+     * @param writer The PrintWriter for file output
+     * @param feedback List of feedback to analyze
+     */
     private void writeOverallStatistics(PrintWriter writer, List<AppointmentFeedback> feedback) {
         double averageRating = feedback.stream()
             .mapToInt(AppointmentFeedback::getRating)
@@ -202,6 +258,10 @@ public class AdminFeedbackViewer {
         writer.println();
     }
 
+    /**
+     * Writes doctor-specific statistics to the report file.
+     * @param writer The PrintWriter for file output
+     */
     private void writeDoctorStatistics(PrintWriter writer) {
         writer.println("Doctor-wise Statistics");
         writer.println("----------------------------------------");
@@ -218,6 +278,11 @@ public class AdminFeedbackViewer {
         writer.println();
     }
 
+    /**
+     * Writes recent feedback entries to the report file.
+     * @param writer The PrintWriter for file output
+     * @param feedback List of feedback to include
+     */
     private void writeRecentFeedback(PrintWriter writer, List<AppointmentFeedback> feedback) {
         writer.println("Recent Feedback");
         writer.println("----------------------------------------");
@@ -237,6 +302,12 @@ public class AdminFeedbackViewer {
             });
     }
 
+    /**
+     * Writes detailed feedback report for a specific doctor.
+     * @param writer The PrintWriter for file output
+     * @param doctor The doctor whose feedback to report
+     * @param feedback List of feedback for the doctor
+     */
     private void writeDoctorFeedbackReport(PrintWriter writer, Doctor doctor, List<AppointmentFeedback> feedback) {
         double avgRating = feedbackService.getAverageRatingForDoctor(doctor.getId());
         
@@ -272,6 +343,10 @@ public class AdminFeedbackViewer {
             });
     }
 
+    /**
+     * Displays a list of doctors for selection.
+     * @param doctors List of doctors to display
+     */
     private void displayDoctorList(List<Doctor> doctors) {
         System.out.println("\nSelect Doctor:");
         for (int i = 0; i < doctors.size(); i++) {

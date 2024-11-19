@@ -13,10 +13,30 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the IAppointmentManager interface.
+ * Manages doctor appointments including:
+ * - Appointment status tracking
+ * - Appointment scheduling
+ * - Outcome recording
+ * - Prescription management
+ * Provides core functionality for doctor-side appointment operations.
+ */
 public class AppointmentManagerImpl implements IAppointmentManager {
+    /** Manages list of appointments and their persistence */
     private final AppointmentList appointmentList;
+    
+    /** Service for managing appointment outcomes */
     private final IAppointmentOutcomeService outcomeService;
 
+    /**
+     * Constructs AppointmentManagerImpl with required dependencies.
+     * Validates dependencies and initializes appointment management.
+     * 
+     * @param appointmentList List manager for appointments
+     * @param outcomeService Service for handling appointment outcomes
+     * @throws IllegalArgumentException if any dependency is null
+     */
     public AppointmentManagerImpl(AppointmentList appointmentList,
             IAppointmentOutcomeService outcomeService) {
         if (appointmentList == null || outcomeService == null) {
@@ -27,6 +47,17 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         System.out.println("AppointmentManagerImpl initialized");
     }
 
+    /**
+     * Retrieves pending appointments for a specific doctor.
+     * Filters appointments by:
+     * - Pending status
+     * - Future dates
+     * - Doctor assignment
+     * Sorts results by appointment date.
+     * 
+     * @param doctorId ID of the doctor
+     * @return List of pending appointments
+     */
     @Override
     public List<Appointment> viewPendingAppointments(String doctorId) {
         if (doctorId == null || doctorId.trim().isEmpty()) {
@@ -69,6 +100,17 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         return pendingAppointments;
     }
 
+    /**
+     * Retrieves upcoming confirmed appointments for a doctor.
+     * Filters for:
+     * - Confirmed status
+     * - Future dates
+     * - Doctor assignment
+     * Sorts by appointment date.
+     * 
+     * @param doctorId ID of the doctor
+     * @return List of upcoming appointments
+     */
     @Override
     public List<Appointment> getUpcomingAppointments(String doctorId) {
         if (doctorId == null || doctorId.trim().isEmpty()) {
@@ -108,6 +150,15 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         return upcomingAppointments;
     }
 
+    /**
+     * Accepts a pending appointment request.
+     * Updates appointment status to Confirmed.
+     * Persists changes to storage.
+     * 
+     * @param appointmentId ID of appointment to accept
+     * @throws IllegalArgumentException if appointment not found
+     * @throws IllegalStateException if appointment cannot be accepted
+     */
     @Override
     public void acceptAppointment(String appointmentId) {
         if (appointmentId == null || appointmentId.trim().isEmpty()) {
@@ -130,6 +181,15 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         System.out.println("Appointment accepted successfully. New status: " + appointment.getStatus());
     }
 
+    /**
+     * Declines a pending appointment request.
+     * Updates appointment status to Declined.
+     * Persists changes to storage.
+     * 
+     * @param appointmentId ID of appointment to decline
+     * @throws IllegalArgumentException if appointment not found
+     * @throws IllegalStateException if appointment cannot be declined
+     */
     @Override
     public void declineAppointment(String appointmentId) {
         if (appointmentId == null || appointmentId.trim().isEmpty()) {
@@ -152,66 +212,92 @@ public class AppointmentManagerImpl implements IAppointmentManager {
         System.out.println("Appointment declined successfully. New status: " + appointment.getStatus());
     }
 
+    /**
+     * Records the outcome of a completed appointment.
+     * Updates appointment with:
+     * - Service details
+     * - Consultation notes
+     * - Prescriptions
+     * Persists outcome and updates appointment status.
+     * 
+     * @param appointmentId ID of the appointment
+     * @param serviceType Type of service provided
+     * @param consultationNotes Doctor's notes
+     * @param prescriptions List of prescribed medications
+     * @return Created appointment outcome
+     * @throws IllegalArgumentException if parameters invalid
+     * @throws IllegalStateException if outcome cannot be recorded
+     */
     @Override
-public AppointmentOutcome recordAppointmentOutcome(String appointmentId,
-        String serviceType,
-        String consultationNotes,
-        List<Prescription> prescriptions) {
-    if (appointmentId == null || appointmentId.trim().isEmpty()) {
-        throw new IllegalArgumentException("Invalid appointment ID");
+    public AppointmentOutcome recordAppointmentOutcome(String appointmentId,
+            String serviceType,
+            String consultationNotes,
+            List<Prescription> prescriptions) {
+        if (appointmentId == null || appointmentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid appointment ID");
+        }
+
+        System.out.println("Recording outcome for appointment: " + appointmentId);
+        Appointment appointment = appointmentList.getAppointmentById(appointmentId);
+        
+        if (appointment == null) {
+            throw new IllegalArgumentException("Appointment not found");
+        }
+
+        if (!"Confirmed".equalsIgnoreCase(appointment.getStatus())) {
+            throw new IllegalStateException("Cannot record outcome for appointment with status: " + 
+                                          appointment.getStatus());
+        }
+
+        // Set the outcome first
+        appointment.setOutcome(serviceType, consultationNotes, prescriptions);
+        appointment.setStatus("Completed");
+        
+        // Create the appointment outcome
+        AppointmentOutcome outcome = new AppointmentOutcome(
+            appointmentId,
+            appointment.getPatient().getId(),
+            appointment.getDoctor().getId(),
+            appointment.getAppointmentDate(),
+            serviceType,
+            consultationNotes);
+
+        // Add prescriptions to the outcome
+        if (prescriptions != null) {
+            prescriptions.forEach(p -> {
+                if (p != null) {
+                    outcome.addPrescription(p);
+                }
+            });
+        }
+
+        // Save prescriptions only once using appointmentList
+        if (prescriptions != null && !prescriptions.isEmpty()) {
+            appointmentList.savePrescriptionsToCSV("SC2002HMS/data/Prescriptions.csv", prescriptions);
+        }
+
+        // Save the updated appointment
+        appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
+
+        // Save the outcome
+        if (!outcomeService.saveAppointmentOutcome(outcome)) {
+            throw new RuntimeException("Failed to save appointment outcome");
+        }
+
+        System.out.println("Appointment outcome recorded successfully");
+        return outcome;
     }
 
-    System.out.println("Recording outcome for appointment: " + appointmentId);
-    Appointment appointment = appointmentList.getAppointmentById(appointmentId);
-    
-    if (appointment == null) {
-        throw new IllegalArgumentException("Appointment not found");
-    }
-
-    if (!"Confirmed".equalsIgnoreCase(appointment.getStatus())) {
-        throw new IllegalStateException("Cannot record outcome for appointment with status: " + 
-                                      appointment.getStatus());
-    }
-
-    // Set the outcome first
-    appointment.setOutcome(serviceType, consultationNotes, prescriptions);
-    appointment.setStatus("Completed");
-    
-    // Create the appointment outcome
-    AppointmentOutcome outcome = new AppointmentOutcome(
-        appointmentId,
-        appointment.getPatient().getId(),
-        appointment.getDoctor().getId(),
-        appointment.getAppointmentDate(),
-        serviceType,
-        consultationNotes);
-
-    // Add prescriptions to the outcome
-    if (prescriptions != null) {
-        prescriptions.forEach(p -> {
-            if (p != null) {
-                outcome.addPrescription(p);
-            }
-        });
-    }
-
-    // Save prescriptions only once using appointmentList
-    if (prescriptions != null && !prescriptions.isEmpty()) {
-        appointmentList.savePrescriptionsToCSV("SC2002HMS/data/Prescriptions.csv", prescriptions);
-    }
-
-    // Save the updated appointment
-    appointmentList.saveAppointmentsToCSV("SC2002HMS/data/Appointments.csv");
-
-    // Save the outcome
-    if (!outcomeService.saveAppointmentOutcome(outcome)) {
-        throw new RuntimeException("Failed to save appointment outcome");
-    }
-
-    System.out.println("Appointment outcome recorded successfully");
-    return outcome;
-}
-
+    /**
+     * Retrieves completed appointment outcomes for a doctor.
+     * Filters for:
+     * - Completed status
+     * - Doctor assignment
+     * Includes associated outcomes and prescriptions.
+     * 
+     * @param doctorId ID of the doctor
+     * @return List of completed appointment outcomes
+     */
     @Override
     public List<AppointmentOutcome> getCompletedAppointmentOutcomes(String doctorId) {
         if (doctorId == null || doctorId.trim().isEmpty()) {

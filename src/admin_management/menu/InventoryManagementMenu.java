@@ -3,7 +3,11 @@ package admin_management.menu;
 import admin_management.handlers.inventory.*;
 import pharmacy_management.inventory.IReplenishmentService;
 import pharmacy_management.inventory.InventoryManager;
-
+/**
+ * Manages the inventory interface for administrators.
+ * Provides a menu-driven interface for viewing inventory status, managing stock levels,
+ * and handling replenishment requests. Extends MenuBase for common menu functionality.
+ */
 public class InventoryManagementMenu extends MenuBase {
     private final InventoryDisplayHandler displayHandler;
     private final ReplenishmentRequestHandler replenishmentHandler;

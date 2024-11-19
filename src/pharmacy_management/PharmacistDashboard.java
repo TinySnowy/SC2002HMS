@@ -15,14 +15,44 @@ import pharmacy_management.prescriptions.Prescription;
 
 import java.util.List;
 
+/**
+ * Main dashboard interface for pharmacist operations in the HMS.
+ * Manages:
+ * - Inventory monitoring
+ * - Prescription fulfillment
+ * - Stock replenishment
+ * - Appointment outcomes
+ * - Request tracking
+ * Provides centralized access to all pharmacy-related functions.
+ */
 public class PharmacistDashboard {
+    /** Currently active pharmacist user */
     private final Pharmacist pharmacist;
+    
+    /** Manager for medication inventory */
     private final InventoryManager inventoryManager;
+    
+    /** Service for prescription management */
     private final PrescriptionService prescriptionService;
+    
+    /** Service for appointment outcome tracking */
     private final AppointmentOutcomeService appointmentOutcomeService;
+    
+    /** Service for inventory replenishment */
     private final IReplenishmentService replenishmentService;
+    
+    /** Scanner for user input */
     private final Scanner scanner;
 
+    /**
+     * Constructs dashboard with required services and user context.
+     * Initializes all necessary components for pharmacy operations.
+     * 
+     * @param pharmacist Active pharmacist user
+     * @param inventoryManager Inventory control system
+     * @param replenishmentService Stock replenishment service
+     * @param userController User management system
+     */
     public PharmacistDashboard(Pharmacist pharmacist, InventoryManager inventoryManager,
             IReplenishmentService replenishmentService, UserController userController) {
         this.pharmacist = pharmacist;
@@ -33,6 +63,14 @@ public class PharmacistDashboard {
         this.scanner = new Scanner(System.in);
     }
 
+    /**
+     * Displays and manages main dashboard interface.
+     * Handles:
+     * - Menu display
+     * - Option selection
+     * - Function routing
+     * - Session management
+     */
     public void showDashboard() {
         while (true) {
             displayMenu();
@@ -65,6 +103,14 @@ public class PharmacistDashboard {
         }
     }
 
+    /**
+     * Displays dashboard menu options.
+     * Shows:
+     * - Inventory management
+     * - Prescription handling
+     * - Replenishment options
+     * - System navigation
+     */
     private void displayMenu() {
         System.out.println("\nPharmacist Dashboard - " + pharmacist.getName());
         System.out.println("----------------------------------------");
@@ -78,6 +124,13 @@ public class PharmacistDashboard {
         System.out.print("Enter your choice: ");
     }
 
+    /**
+     * Displays current medication inventory.
+     * Shows:
+     * - Stock levels
+     * - Low stock alerts
+     * - Inventory status
+     */
     private void viewInventory() {
         System.out.println("\nCurrent Inventory:");
         System.out.println("----------------------------------------");
@@ -88,6 +141,14 @@ public class PharmacistDashboard {
         scanner.nextLine();
     }
 
+    /**
+     * Manages prescription viewing and fulfillment.
+     * Handles:
+     * - Prescription list
+     * - Dispensing process
+     * - Status updates
+     * - Inventory updates
+     */
     private void viewAndFulfillPrescriptions() {
         while (true) {
             System.out.println("\nPrescription Management");
@@ -117,6 +178,15 @@ public class PharmacistDashboard {
         }
     }
 
+    /**
+     * Processes prescription dispensing.
+     * Manages:
+     * - Prescription selection
+     * - Stock verification
+     * - Dispensing process
+     * - Status updates
+     * - Replenishment triggers
+     */
     private void dispensePrescription() {
         prescriptionService.displayPendingPrescriptions();
 
@@ -143,6 +213,14 @@ public class PharmacistDashboard {
         scanner.nextLine();
     }
 
+    /**
+     * Handles medication replenishment requests.
+     * Manages:
+     * - Request creation
+     * - Quantity specification
+     * - Request tracking
+     * - Status monitoring
+     */
     private void requestRefill() {
         System.out.println("\nSubmit Replenishment Request");
         System.out.println("----------------------------------------");
@@ -169,6 +247,14 @@ public class PharmacistDashboard {
         scanner.nextLine();
     }
 
+    /**
+     * Displays pharmacist's replenishment requests.
+     * Shows:
+     * - Request history
+     * - Status updates
+     * - Admin notes
+     * - Request details
+     */
     private void viewReplenishmentRequests() {
         List<ReplenishmentRequest> requests = replenishmentService.getRequestsByPharmacist(pharmacist.getId());
 
@@ -194,6 +280,14 @@ public class PharmacistDashboard {
         scanner.nextLine();
     }
 
+    /**
+     * Displays appointment outcomes requiring prescription fulfillment.
+     * Shows:
+     * - Pending prescriptions
+     * - Patient details
+     * - Doctor notes
+     * - Prescription requirements
+     */
     private void viewAppointmentOutcomes() {
         List<AppointmentOutcome> pendingOutcomes = appointmentOutcomeService.getPendingPrescriptionOutcomes();
 
@@ -222,6 +316,17 @@ public class PharmacistDashboard {
         scanner.nextLine();
     }
 
+    /**
+     * Validates numeric input within range.
+     * Handles:
+     * - Input validation
+     * - Error recovery
+     * - Range checking
+     *
+     * @param prompt Prompt message for input
+     * @param minimum Minimum acceptable value
+     * @return Validated input
+     */
     private int getValidatedInput(String prompt, int minimum) {
         while (true) {
             try {

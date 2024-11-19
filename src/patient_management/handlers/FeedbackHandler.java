@@ -8,12 +8,35 @@ import user_management.Patient;
 import java.util.Scanner;
 import java.util.List;
 
+/**
+ * Handles feedback management for patient appointments in the HMS.
+ * Manages:
+ * - Feedback submission
+ * - Feedback viewing
+ * - Rating collection
+ * - Anonymous feedback options
+ * Provides interface for patients to give and view appointment feedback.
+ */
 public class FeedbackHandler {
+    /** Currently active patient */
     private final Patient patient;
+    
+    /** System-wide appointment list */
     private final AppointmentList appointmentList;
+    
+    /** Service for managing feedback */
     private final FeedbackService feedbackService;
+    
+    /** Scanner for user input */
     private final Scanner scanner;
 
+    /**
+     * Constructs a new FeedbackHandler with required dependencies.
+     * 
+     * @param patient Active patient
+     * @param appointmentList System appointment list
+     * @param feedbackService Service for feedback management
+     */
     public FeedbackHandler(Patient patient, AppointmentList appointmentList, FeedbackService feedbackService) {
         this.patient = patient;
         this.appointmentList = appointmentList;
@@ -21,7 +44,16 @@ public class FeedbackHandler {
         this.scanner = new Scanner(System.in);
     }
 
+    /**
+     * Handles the feedback submission process.
+     * Steps:
+     * 1. Get completed appointments
+     * 2. Display available appointments
+     * 3. Select appointment
+     * 4. Collect and submit feedback
+     */
     public void handleFeedback() {
+        // Get appointments eligible for feedback
         List<Appointment> completedAppointments = appointmentList.getAppointmentsForPatient(patient.getId())
             .stream()
             .filter(apt -> "Completed".equalsIgnoreCase(apt.getStatus()))
@@ -41,6 +73,15 @@ public class FeedbackHandler {
         }
     }
 
+    /**
+     * Displays completed appointments available for feedback.
+     * Shows:
+     * - Appointment date
+     * - Doctor name
+     * - Selection number
+     * 
+     * @param appointments List of completed appointments
+     */
     private void displayCompletedAppointments(List<Appointment> appointments) {
         System.out.println("\nCompleted Appointments Available for Feedback:");
         System.out.println("--------------------------------------------");
@@ -54,6 +95,13 @@ public class FeedbackHandler {
         System.out.println("--------------------------------------------");
     }
 
+    /**
+     * Handles appointment selection for feedback.
+     * Validates user input and returns selected appointment.
+     * 
+     * @param appointments List of available appointments
+     * @return Selected appointment or null if cancelled
+     */
     private Appointment selectAppointment(List<Appointment> appointments) {
         while (true) {
             System.out.print("\nSelect appointment number (or 0 to cancel): ");
@@ -70,6 +118,16 @@ public class FeedbackHandler {
         }
     }
 
+    /**
+     * Handles feedback submission process.
+     * Collects:
+     * - Rating (1-5)
+     * - Comments
+     * - Anonymity preference
+     * Creates and submits feedback record.
+     * 
+     * @param appointment Appointment to submit feedback for
+     */
     private void submitFeedback(Appointment appointment) {
         System.out.println("\nSubmit Feedback");
         System.out.println("--------------------------------------------");
@@ -102,6 +160,12 @@ public class FeedbackHandler {
         System.out.println("\nThank you for your feedback!");
     }
 
+    /**
+     * Collects and validates rating input.
+     * Displays rating scale and validates selection.
+     * 
+     * @return Selected rating (1-5) or 0 if cancelled
+     */
     private int getRating() {
         while (true) {
             System.out.println("\nPlease rate your experience (1-5):");

@@ -11,17 +11,53 @@ import patient_management.controllers.MedicalRecordController;
 import patient_management.utils.PatientMenuPrinter;
 import patient_management.interfaces.*;
 
+/**
+ * Main dashboard interface for patient interactions in the HMS.
+ * Manages:
+ * - Medical record access
+ * - Appointment operations
+ * - Personal information updates
+ * - Feedback submission
+ * - User session control
+ * Serves as the central hub for all patient-related activities.
+ */
 public class PatientDashboard {
+    /** Currently active patient user */
     private final Patient patient;
+    
+    /** Controller for managing medical records */
     private final MedicalRecordController medicalRecordController;
+    
+    /** Interface for viewing appointment details */
     private final IAppointmentViewer appointmentViewer;
+    
+    /** Interface for managing appointment operations */
     private final IAppointmentHandler appointmentHandler;
+    
+    /** Interface for managing personal information */
     private final IPersonalInfoManager personalInfoManager;
+    
+    /** Handler for feedback operations */
     private final FeedbackHandler feedbackHandler;
+    
+    /** Utility for menu display and input */
     private final PatientMenuPrinter menuPrinter;
+    
+    /** System-wide appointment management */
     private final AppointmentList appointmentList;
+    
+    /** Controller for user management */
     private final UserController userController;
 
+    /**
+     * Constructs a new PatientDashboard with required dependencies.
+     * Initializes all necessary components and services.
+     * Sets up handlers and viewers for patient operations.
+     * 
+     * @param patient Currently logged-in patient
+     * @param appointmentList System appointment manager
+     * @param userController User management system
+     */
     public PatientDashboard(Patient patient, AppointmentList appointmentList, UserController userController) {
         this.patient = patient;
         this.userController = userController;

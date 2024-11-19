@@ -7,8 +7,15 @@ public class StaffManagementMenu extends MenuBase {
     private final StaffDisplayHandler displayHandler;
     private final StaffCreationHandler creationHandler;
     private final StaffRemovalHandler removalHandler;
+    
+    
     private final StaffFilterHandler filterHandler;
-
+   /**
+     * Constructs a StaffManagementMenu with the specified user controller.
+     * Initializes all necessary handlers for staff management operations.
+     * 
+     * @param userController Controller for user-related operations
+     */
     public StaffManagementMenu(UserController userController) {
         super();
         this.displayHandler = new StaffDisplayHandler(userController);
@@ -27,6 +34,16 @@ public class StaffManagementMenu extends MenuBase {
         }
     }
 
+    /**
+     * Displays the staff management menu and handles user interaction.
+     * Menu options include:
+     * 1. View All Staff
+     * 2. Add New Staff
+     * 3. Remove Staff
+     * 4. Update Staff Information
+     * 5. Filter Staff by Role
+     * 6. Return to Main Menu
+     */
     @Override
     protected boolean handleChoice(int choice) {
         try {

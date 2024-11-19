@@ -7,18 +7,54 @@ import user_management.UserController;
 
 import java.util.*;
 
+/**
+ * Manages user login credentials and authentication in the hospital management system.
+ * Handles:
+ * - User authentication
+ * - Password management
+ * - Role-based access control
+ * - First-time login tracking
+ * - Credential persistence
+ */
 public class LoginCredentials {
+    /** Database of user login information mapped by user ID */
     private Map<String, LoginInfo> loginDatabase;
+    
+    /** File path for storing login credentials */
     private static final String LOGIN_FILE = "SC2002HMS/data/Login.csv";
+    
+    /** Flag to prevent recursive initialization */
     private static boolean isInitializing = false;
+    
+    /** Reference to user management system */
     private final UserController userController;
 
+    /**
+     * Inner class representing user login information.
+     * Encapsulates:
+     * - User identification
+     * - Role information
+     * - Password security
+     * - Login status
+     */
     private static class LoginInfo {
+        /** User's unique identifier */
         String id;
+        /** User's system role */
         String role; 
+        /** Hashed password for security */
         String passwordHash;
+        /** Tracks if user needs to change password */
         boolean isFirstLogin;
 
+        /**
+         * Constructs login information for a user.
+         * 
+         * @param id User's unique identifier
+         * @param role User's system role
+         * @param passwordHash Hashed password
+         * @param isFirstLogin First login status
+         */
         LoginInfo(String id, String role, String passwordHash, boolean isFirstLogin) {
             this.id = id;
             this.role = role;
@@ -27,6 +63,10 @@ public class LoginCredentials {
         }
     }
 
+    /**
+     * Initializes the login credential system.
+     * Loads existing credentials and sets up user management.
+     */
     public LoginCredentials() {
         this.loginDatabase = new HashMap<>();
         this.userController = UserController.getInstance();
@@ -34,6 +74,11 @@ public class LoginCredentials {
         System.out.println("LoginCredentials initialized with " + loginDatabase.size() + " users");
     }
 
+    /**
+     * Loads login credentials from CSV storage.
+     * Creates default credentials if none exist.
+     * Validates credentials against user database.
+     */
     private void loadLoginData() {
         if (isInitializing) return;
         
@@ -75,12 +120,16 @@ public class LoginCredentials {
         }
     }
 
+    /**
+     * Creates default login credentials for all users.
+     * Sets default password and first login status.
+     * Used when no existing credentials are found.
+     */
     private void initializeLoginData() {
         System.out.println("Initializing default login data...");
         String defaultPasswordHash = PasswordUtil.hashPassword("password");
         loginDatabase.clear();
 
-        // Get all users from UserController
         List<user_management.User> allUsers = userController.getAllUsers();
         for (user_management.User user : allUsers) {
             loginDatabase.put(user.getId(), 
@@ -94,11 +143,18 @@ public class LoginCredentials {
             System.out.println("Created login entry for: " + user.getId());
         }
 
-        // Save to file
         saveLoginData();
         System.out.println("Default login data initialized for " + loginDatabase.size() + " users");
     }
 
+    /**
+     * Authenticates user login attempt.
+     * Verifies credentials against stored information.
+     * 
+     * @param id User ID attempting login
+     * @param password Password to verify
+     * @return true if authentication successful, false otherwise
+     */
     public boolean authenticateUser(String id, String password) {
         if (id == null || password == null) {
             System.out.println("Authentication failed: null id or password");
@@ -116,6 +172,12 @@ public class LoginCredentials {
         return isValid;
     }
 
+    /**
+     * Retrieves user's role in the system.
+     * 
+     * @param id User ID to check
+     * @return User's role or null if not found
+     */
     public String getUserRole(String id) {
         LoginInfo info = loginDatabase.get(id);
         if (info == null) {
@@ -125,11 +187,24 @@ public class LoginCredentials {
         return info.role;
     }
 
+    /**
+     * Checks if user needs to change password.
+     * 
+     * @param id User ID to check
+     * @return true if first login, false otherwise
+     */
     public boolean isFirstLogin(String id) {
         LoginInfo info = loginDatabase.get(id);
         return info != null && info.isFirstLogin;
     }
 
+    /**
+     * Updates user's password.
+     * Hashes new password and updates first login status.
+     * 
+     * @param id User ID to update
+     * @param newPassword New password to set
+     */
     public void updatePassword(String id, String newPassword) {
         if (id == null || newPassword == null || newPassword.trim().isEmpty()) {
             System.out.println("Invalid id or password for update");

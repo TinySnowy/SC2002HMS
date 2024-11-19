@@ -8,14 +8,38 @@ import java.time.LocalDate;
 import utils.CSVReaderUtil;
 import utils.CSVWriterUtil;
 
+/**
+ * Service class implementing inventory management operations.
+ * Manages:
+ * - Medication database
+ * - Stock levels
+ * - Inventory persistence
+ * - Stock alerts
+ * Provides core functionality for pharmacy inventory control.
+ */
 public class InventoryService implements IInventoryService {
+  /** Central storage for medication inventory */
   private final Map<String, Medication> medications = new HashMap<>();
+  /** Path to medication inventory data file */
   private static final String INVENTORY_FILE = "SC2002HMS/data/Medicine_List.csv";
 
+  /**
+   * Initializes inventory service and loads existing data.
+   * Sets up medication tracking and loads CSV data.
+   */
   public InventoryService() {
     loadInventory();
   }
 
+  /**
+   * Loads medication inventory from CSV storage.
+   * Processes:
+   * - Medication details
+   * - Stock levels
+   * - Thresholds
+   * - Expiry dates
+   * Handles file reading and parsing errors.
+   */
   private void loadInventory() {
     List<String[]> records = CSVReaderUtil.readCSV(INVENTORY_FILE);
     boolean isFirstRow = true;
@@ -39,16 +63,40 @@ public class InventoryService implements IInventoryService {
     }
   }
 
+  /**
+   * Retrieves complete list of medications.
+   * Returns defensive copy to protect inventory data.
+   * 
+   * @return List of all medications in inventory
+   */
   @Override
   public List<Medication> getAllMedications() {
     return new ArrayList<>(medications.values());
   }
 
+  /**
+   * Finds medication by name.
+   * Case-sensitive lookup in medication database.
+   * 
+   * @param name Name of medication to find
+   * @return Medication if found, null otherwise
+   */
   @Override
   public Medication getMedicationByName(String name) {
     return medications.get(name);
   }
 
+  /**
+   * Updates medication stock level.
+   * Handles:
+   * - Medication existence check
+   * - Stock update
+   * - Stock persistence
+   * 
+   * @param medicationName Name of medication to update
+   * @param quantity Quantity to add to current stock
+   * @return True if stock was updated successfully, false otherwise
+   */
   @Override
   public boolean updateStock(String medicationName, int quantity) {
     try {

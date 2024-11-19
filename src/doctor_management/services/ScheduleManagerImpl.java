@@ -8,17 +8,47 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+/**
+ * Implementation of the IScheduleManager interface.
+ * Manages doctor schedules and availability including:
+ * - Schedule creation and updates
+ * - Time slot management
+ * - Availability checking
+ * - Schedule persistence
+ * Provides core functionality for doctor scheduling operations.
+ */
 public class ScheduleManagerImpl implements IScheduleManager {
+    /** Maps doctor IDs to their schedule entries */
     private final Map<String, DoctorSchedule> doctorSchedules;
+    
+    /** File path for persistent storage of schedules */
     private static final String SCHEDULE_FILE = "SC2002HMS/data/DoctorSchedules.csv";
+    
+    /** Time formatter for parsing and formatting time slots */
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    
+    /** Date formatter for parsing and formatting dates */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * Constructs a new ScheduleManagerImpl.
+     * Initializes schedule storage and loads existing schedules.
+     * Creates empty schedule map if no existing data.
+     */
     public ScheduleManagerImpl() {
         this.doctorSchedules = new HashMap<>();
         loadSchedulesFromCSV();
     }
 
+    /**
+     * Sets availability schedule for a doctor.
+     * Updates or creates new schedule entries.
+     * Persists changes to storage.
+     * 
+     * @param doctorId ID of the doctor
+     * @param scheduleEntries List of schedule entries
+     * @throws IllegalArgumentException if parameters invalid
+     */
     @Override
     public void setAvailability(String doctorId, List<ScheduleEntry> scheduleEntries) {
         DoctorSchedule schedule = new DoctorSchedule(scheduleEntries);
@@ -26,12 +56,27 @@ public class ScheduleManagerImpl implements IScheduleManager {
         saveSchedulesToCSV();
     }
 
+    /**
+     * Retrieves availability schedule for a doctor.
+     * Returns empty list if no schedule exists.
+     * 
+     * @param doctorId ID of the doctor
+     * @return List of schedule entries
+     */
     @Override
     public List<ScheduleEntry> getAvailability(String doctorId) {
         DoctorSchedule schedule = doctorSchedules.get(doctorId);
         return schedule != null ? schedule.getScheduleEntries() : new ArrayList<>();
     }
 
+    /**
+     * Checks if a doctor is available at specific date/time.
+     * Validates against existing schedule entries.
+     * 
+     * @param doctorId ID of the doctor
+     * @param dateTime Date and time to check
+     * @return true if available, false otherwise
+     */
     @Override
     public boolean isAvailable(String doctorId, LocalDateTime dateTime) {
         DoctorSchedule schedule = doctorSchedules.get(doctorId);
@@ -39,6 +84,13 @@ public class ScheduleManagerImpl implements IScheduleManager {
         return schedule.isTimeSlotAvailable(dateTime);
     }
 
+    /**
+     * Validates time slot format and value.
+     * Ensures time is in proper format and intervals.
+     * 
+     * @param time Time string to validate
+     * @return true if valid, false otherwise
+     */
     @Override
     public boolean validateTimeSlot(String time) {
         try {
@@ -49,6 +101,13 @@ public class ScheduleManagerImpl implements IScheduleManager {
         }
     }
 
+    /**
+     * Validates date format and value.
+     * Ensures date is in proper format.
+     * 
+     * @param date Date string to validate
+     * @return true if valid, false otherwise
+     */
     @Override
     public boolean validateDate(String date) {
         try {
@@ -59,6 +118,11 @@ public class ScheduleManagerImpl implements IScheduleManager {
         }
     }
 
+    /**
+     * Loads doctor schedules from CSV storage.
+     * Creates schedule entries from stored data.
+     * Handles file reading and data parsing.
+     */
     private void loadSchedulesFromCSV() {
         try {
             List<String[]> records = CSVReaderUtil.readCSV(SCHEDULE_FILE);
@@ -88,6 +152,11 @@ public class ScheduleManagerImpl implements IScheduleManager {
         }
     }
 
+    /**
+     * Saves doctor schedules to CSV storage.
+     * Persists current schedule data.
+     * Handles file writing and data formatting.
+     */
     private void saveSchedulesToCSV() {
         try {
             CSVWriterUtil.writeCSV(SCHEDULE_FILE, writer -> {

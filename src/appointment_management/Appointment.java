@@ -9,16 +9,49 @@ import java.util.List;
 
 import pharmacy_management.prescriptions.Prescription;
 
+/**
+ * Represents a medical appointment in the hospital management system.
+ * Manages all appointment-related information including:
+ * - Patient and doctor details
+ * - Appointment scheduling
+ * - Status tracking
+ * - Consultation outcomes
+ * - Prescription management
+ */
 public class Appointment {
+    /** Unique identifier for the appointment */
     private String appointmentId;
+    
+    /** Patient associated with the appointment */
     private Patient patient;
+    
+    /** Doctor conducting the appointment */
     private Doctor doctor;
+    
+    /** Scheduled date and time of the appointment */
     private LocalDateTime appointmentDate;
+    
+    /** Current status of the appointment (Pending/Confirmed/Cancelled/Completed) */
     private String status;
+    
+    /** Type of medical service provided */
     private String serviceType;
+    
+    /** Doctor's notes from the consultation */
     private String consultationNotes;
+    
+    /** List of prescriptions issued during the appointment */
     private List<Prescription> prescriptions;
 
+    /**
+     * Constructs a new appointment with essential details.
+     * Initializes with pending status and empty prescription list.
+     * 
+     * @param appointmentId Unique identifier for the appointment
+     * @param patient Patient scheduled for the appointment
+     * @param doctor Doctor conducting the appointment
+     * @param appointmentDate Scheduled date and time
+     */
     public Appointment(String appointmentId, Patient patient, Doctor doctor, LocalDateTime appointmentDate) {
         this.appointmentId = appointmentId;
         this.patient = patient;
@@ -28,48 +61,76 @@ public class Appointment {
         this.prescriptions = new ArrayList<>();
     }
 
-    public String getAppointmentId() {
-        return appointmentId;
-    }
+    /**
+     * Retrieves the appointment's unique identifier
+     * @return Appointment ID
+     */
+    public String getAppointmentId() { return appointmentId; }
 
-    public Patient getPatient() {
-        return patient;
-    }
+    /**
+     * Retrieves the patient associated with the appointment
+     * @return Patient object
+     */
+    public Patient getPatient() { return patient; }
 
-    public Doctor getDoctor() {
-        return doctor;
-    }
+    /**
+     * Retrieves the doctor conducting the appointment
+     * @return Doctor object
+     */
+    public Doctor getDoctor() { return doctor; }
 
-    public LocalDateTime getAppointmentDate() {
-        return appointmentDate;
-    }
+    /**
+     * Retrieves the scheduled appointment date and time
+     * @return LocalDateTime of appointment
+     */
+    public LocalDateTime getAppointmentDate() { return appointmentDate; }
 
-    public String getStatus() {
-        return status;
-    }
+    /**
+     * Retrieves the current appointment status
+     * @return Status string (Pending/Confirmed/Cancelled/Completed)
+     */
+    public String getStatus() { return status; }
 
+    /**
+     * Updates the appointment status
+     * @param status New status to set
+     */
     public void setStatus(String status) {
-        this.status = status; // Allow setting the status directly
+        this.status = status;
     }
 
+    /**
+     * Updates the appointment date and time
+     * @param appointmentDate New date and time
+     */
     public void setAppointmentDate(LocalDateTime appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 
-    public String getServiceType() {
-        return serviceType;
-    }
+    /**
+     * Retrieves the type of medical service provided
+     * @return Service type description
+     */
+    public String getServiceType() { return serviceType; }
 
-    public String getConsultationNotes() {
-        return consultationNotes;
-    }
+    /**
+     * Retrieves the consultation notes
+     * @return Doctor's notes from the consultation
+     */
+    public String getConsultationNotes() { return consultationNotes; }
 
-    // Method to confirm the appointment
+    /**
+     * Confirms the appointment.
+     * Updates status to "Confirmed"
+     */
     public void confirm() {
         this.status = "Confirmed";
     }
 
-    // Method to decline the appointment
+    /**
+     * Declines/Cancels the appointment.
+     * Updates status to "Cancelled"
+     */
     public void decline() {
         this.status = "Cancelled";
     }

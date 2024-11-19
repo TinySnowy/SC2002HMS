@@ -5,12 +5,24 @@ import java.util.Scanner;
 import admin_management.utils.InputValidator;
 import admin_management.managers.StaffManager;
 
+/**
+ * Handles the creation of new staff members in the system.
+ * Supports creation of Doctors, Pharmacists, and Administrators with appropriate validation.
+ */
 public class StaffCreationHandler {
+    /** Controller for user-related operations */
     private final UserController userController;
+    /** Manager for staff-specific operations */
     private final StaffManager staffManager;
+    /** Scanner for reading user input */
     private final Scanner scanner;
+    /** Validator for input validation */
     private final InputValidator validator;
 
+    /**
+     * Constructs a StaffCreationHandler with the specified user controller.
+     * @param userController The controller for user operations
+     */
     public StaffCreationHandler(UserController userController) {
         this.userController = userController;
         this.staffManager = new StaffManager(userController);
@@ -18,6 +30,18 @@ public class StaffCreationHandler {
         this.validator = new InputValidator();
     }
 
+    /**
+     * Handles the process of adding a new staff member.
+     * Collects and validates all required information based on staff role.
+     * Creates appropriate staff object and adds to the system.
+     * 
+     * Process:
+     * 1. Select staff role (Doctor/Pharmacist/Administrator)
+     * 2. Enter staff ID with role-specific prefix
+     * 3. Enter basic information (name, gender, age)
+     * 4. Enter role-specific information (specialty/license)
+     * 5. Create and save staff member
+     */
     public void addNewStaff() {
         try {
             System.out.println("\nAdd New Staff Member");
@@ -44,6 +68,7 @@ public class StaffCreationHandler {
                     throw new IllegalArgumentException("Invalid role choice");
             }
 
+            // Role-specific ID prefix validation
             System.out.print("Enter Staff ID (" + rolePrefix + "XXX format): ");
             String id = scanner.nextLine().trim().toUpperCase();
             if (!id.startsWith(rolePrefix) || id.length() != 4) {

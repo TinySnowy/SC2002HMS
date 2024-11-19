@@ -11,19 +11,48 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+/**
+ * Central controller managing all user operations in the HMS.
+ * Handles:
+ * - User data persistence
+ * - Staff and patient management
+ * - Authentication services
+ * - Data validation
+ * - CSV operations
+ * Provides singleton access to user management functionality.
+ */
 public class UserController {
+    /** Singleton instance of the controller */
     private static UserController instance;
+    
+    /** Central storage for all system users */
     private final Map<String, User> userDatabase;
+    
+    /** File path for staff data storage */
     private static final String STAFF_FILE = "SC2002HMS/data/Staff_List.csv";
+    
+    /** File path for patient data storage */
     private static final String PATIENT_FILE = "SC2002HMS/data/Patient_List.csv";
+    
+    /** Date format for patient records */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * Private constructor for singleton pattern.
+     * Initializes database and loads existing user data.
+     */
     private UserController() {
         userDatabase = new HashMap<>();
         loadPatientData();
         loadStaffData();
     }
 
+    /**
+     * Provides singleton access to controller.
+     * Creates instance if not exists.
+     * 
+     * @return Singleton controller instance
+     */
     public static UserController getInstance() {
         if (instance == null) {
             instance = new UserController();
@@ -31,6 +60,15 @@ public class UserController {
         return instance;
     }
 
+    /**
+     * Loads patient data from CSV storage.
+     * Processes:
+     * - Personal information
+     * - Medical details
+     * - Authentication data
+     * - Login status
+     * Handles file reading and parsing errors.
+     */
     private void loadPatientData() {
         List<String[]> records = CSVReaderUtil.readCSV(PATIENT_FILE);
         boolean isFirstRow = true;
@@ -71,6 +109,15 @@ public class UserController {
                           userDatabase.values().stream().filter(u -> u instanceof Patient).count());
     }
 
+    /**
+     * Loads staff data from CSV storage.
+     * Processes:
+     * - Staff credentials
+     * - Role assignments
+     * - Department details
+     * - Professional information
+     * Handles file reading and parsing errors.
+     */
     private void loadStaffData() {
         List<String[]> records = CSVReaderUtil.readCSV(STAFF_FILE);
         boolean isFirstRow = true;
@@ -109,6 +156,23 @@ public class UserController {
                           userDatabase.values().stream().filter(u -> !(u instanceof Patient)).count());
     }
 
+    /**
+     * Creates appropriate staff user based on role.
+     * Supports:
+     * - Doctors
+     * - Pharmacists
+     * - Administrators
+     * 
+     * @param id Staff identifier
+     * @param name Staff name
+     * @param role System role
+     * @param specialtyOrLicense Professional credentials
+     * @param gender Staff gender
+     * @param age Staff age
+     * @param passwordHash Authentication hash
+     * @param isFirstLogin Login status
+     * @return Created staff user object
+     */
     private User createStaffUser(String id, String name, String role, String specialtyOrLicense,
             String gender, int age, String passwordHash, boolean isFirstLogin) {
         return switch (role.toLowerCase()) {
@@ -122,6 +186,16 @@ public class UserController {
         };
     }
 
+    /**
+     * Adds new user to system.
+     * Validates:
+     * - Unique ID
+     * - Required fields
+     * - Data consistency
+     * 
+     * @param user New user to add
+     * @throws IllegalArgumentException if validation fails
+     */
     public void addUser(User user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
@@ -132,6 +206,15 @@ public class UserController {
         userDatabase.put(user.getId(), user);
     }
 
+    /**
+     * Removes user from system.
+     * Updates:
+     * - User database
+     * - Persistent storage
+     * 
+     * @param userId ID of user to remove
+     * @throws IllegalArgumentException if user not found
+     */
     public void removeUser(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be null or empty");
@@ -143,6 +226,15 @@ public class UserController {
         persistAllData(); // Save changes immediately
     }
 
+    /**
+     * Updates existing user information.
+     * Maintains:
+     * - Data consistency
+     * - Storage synchronization
+     * 
+     * @param user Updated user data
+     * @throws IllegalArgumentException if user not found
+     */
     public void updateUser(User user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
@@ -154,6 +246,12 @@ public class UserController {
         persistAllData(); // Save changes immediately
     }
 
+    /**
+     * Retrieves user by ID.
+     * 
+     * @param id User identifier
+     * @return User if found, null otherwise
+     */
     public User getUserById(String id) {
         if (id == null || id.trim().isEmpty()) {
             return null;
@@ -161,10 +259,20 @@ public class UserController {
         return userDatabase.get(id);
     }
 
+    /**
+     * Retrieves all system users.
+     * 
+     * @return List of all users
+     */
     public List<User> getAllUsers() {
         return new ArrayList<>(userDatabase.values());
     }
 
+    /**
+     * Retrieves all doctors in system.
+     * 
+     * @return List of all doctors
+     */
     public List<Doctor> getAllDoctors() {
         return userDatabase.values().stream()
                 .filter(user -> user instanceof Doctor)
@@ -172,6 +280,12 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves users by role.
+     * 
+     * @param role Target role
+     * @return List of matching users
+     */
     public List<User> getUsersByRole(String role) {
         if (role == null || role.trim().isEmpty()) {
             return new ArrayList<>();
@@ -181,6 +295,12 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Searches users by name.
+     * 
+     * @param name Search term
+     * @return List of matching users
+     */
     public List<User> searchUsersByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return new ArrayList<>();
@@ -191,6 +311,12 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Searches doctors by specialty.
+     * 
+     * @param specialty Medical specialty
+     * @return List of matching doctors
+     */
     public List<Doctor> searchDoctorsBySpecialty(String specialty) {
         if (specialty == null || specialty.trim().isEmpty()) {
             return new ArrayList<>();
@@ -201,6 +327,13 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Saves patient data to CSV.
+     * Handles:
+     * - Data formatting
+     * - File writing
+     * - Error recovery
+     */
     public void persistPatientData() {
         CSVWriterUtil.writeCSV(PATIENT_FILE, writer -> {
             writer.write("ID,Name,Password,DateOfBirth,Gender,BloodGroup,ContactInfo,Email,FirstLogin\n");
@@ -222,6 +355,12 @@ public class UserController {
         });
     }
 
+    /**
+     * Creates staff record for CSV storage.
+     * 
+     * @param user Staff member
+     * @return Formatted CSV record
+     */
     private String createStaffRecord(User user) {
         try {
             if (user instanceof Doctor doctor) {
@@ -251,6 +390,13 @@ public class UserController {
         return null;
     }
 
+    /**
+     * Saves staff data to CSV.
+     * Handles:
+     * - Data formatting
+     * - File writing
+     * - Error recovery
+     */
     public void persistStaffData() {
         try {
             CSVWriterUtil.writeCSV(STAFF_FILE, writer -> {
@@ -269,6 +415,10 @@ public class UserController {
         }
     }
 
+    /**
+     * Saves all user data to storage.
+     * Updates both staff and patient records.
+     */
     public void persistAllData() {
         try {
             persistPatientData();
@@ -279,6 +429,18 @@ public class UserController {
         }
     }
 
+    /**
+     * Creates new staff user in system.
+     * 
+     * @param id Staff identifier
+     * @param name Staff name
+     * @param role System role
+     * @param password Initial password
+     * @param specialtyOrLicense Professional credentials
+     * @param gender Staff gender
+     * @param age Staff age
+     * @return Created staff user
+     */
     public User createNewStaff(String id, String name, String role, String password,
             String specialtyOrLicense, String gender, int age) {
         if (id == null || name == null || role == null || password == null) {
@@ -294,6 +456,19 @@ public class UserController {
         return newUser;
     }
 
+    /**
+     * Creates new patient in system.
+     * 
+     * @param id Patient identifier
+     * @param name Patient name
+     * @param password Initial password
+     * @param dob Date of birth
+     * @param gender Patient gender
+     * @param bloodGroup Patient blood group
+     * @param contactInfo Patient contact information
+     * @param email Patient email
+     * @return Created patient
+     */
     public Patient createNewPatient(String id, String name, String password, LocalDate dob,
             String gender, String bloodGroup, String contactInfo, String email) {
         if (id == null || name == null || password == null || dob == null) {

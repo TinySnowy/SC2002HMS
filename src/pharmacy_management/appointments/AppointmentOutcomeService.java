@@ -11,13 +11,37 @@ import pharmacy_management.prescriptions.Prescription;
 import patient_management.model.MedicalRecord;
 import patient_management.controllers.MedicalRecordController;
 
+/**
+ * Service class managing appointment outcomes in the HMS.
+ * Handles:
+ * - Outcome data persistence
+ * - Prescription tracking
+ * - CSV file operations
+ * - Medical record updates
+ * Provides centralized management of appointment results and prescriptions.
+ */
 public class AppointmentOutcomeService implements IAppointmentOutcomeService {
+    /** Maps appointment IDs to their medical outcomes */
     private final Map<String, AppointmentOutcome> outcomes;
+    
+    /** Controller for user management operations */
     private final UserController userController;
+    
+    /** Controller for medical record management */
     private final MedicalRecordController medicalRecordController;
+    
+    /** File path for outcome data persistence */
     private static final String OUTCOMES_FILE = "SC2002HMS/data/AppointmentOutcomes.csv";
+    
+    /** Format pattern for date-time storage */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    /**
+     * Initializes the outcome service with required dependencies.
+     * Sets up data structures and loads existing outcomes.
+     * 
+     * @param userController Controller for user operations
+     */
     public AppointmentOutcomeService(UserController userController) {
         this.outcomes = new HashMap<>();
         this.userController = userController;
@@ -25,6 +49,14 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
         loadOutcomes();
     }
 
+    /**
+     * Loads appointment outcomes from CSV storage.
+     * Processes:
+     * - Basic outcome information
+     * - Prescription details
+     * - Data validation
+     * Handles file reading and parsing errors.
+     */
     private void loadOutcomes() {
         List<String[]> records = CSVReaderUtil.readCSV(OUTCOMES_FILE);
         boolean isFirstRow = true;
@@ -36,11 +68,13 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
             }
 
             try {
+                // Validate record format
                 if (record.length < 6) {
                     System.err.println("Invalid outcome record format: insufficient fields");
                     continue;
                 }
 
+                // Parse basic outcome data
                 String appointmentId = record[0].trim();
                 String patientId = record[1].trim();
                 String doctorId = record[2].trim();
@@ -48,10 +82,11 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
                 String serviceType = record[4].trim();
                 String notes = record[5].trim();
 
+                // Create outcome record
                 AppointmentOutcome outcome = new AppointmentOutcome(
                     appointmentId, patientId, doctorId, date, serviceType, notes);
 
-                // Load prescriptions if they exist
+                // Load associated prescriptions if they exist
                 if (record.length > 6 && !record[6].trim().isEmpty()) {
                     loadPrescriptions(outcome, record[6].trim());
                 }
@@ -64,6 +99,14 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
         }
     }
 
+    /**
+     * Loads prescription data for an outcome.
+     * Parses prescription strings and creates prescription objects.
+     * Links prescriptions to patients and outcomes.
+     * 
+     * @param outcome Outcome to add prescriptions to
+     * @param prescriptionData Raw prescription data string
+     */
     private void loadPrescriptions(AppointmentOutcome outcome, String prescriptionData) {
         String[] prescriptions = prescriptionData.split(";");
         for (String prescData : prescriptions) {

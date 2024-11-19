@@ -11,11 +11,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Handles the management of medication replenishment requests.
+ * This class provides functionality for administrators to view, approve, and reject
+ * replenishment requests submitted by pharmacists.
+ */
 public class ReplenishmentRequestHandler {
+    /** Manages inventory operations and medication stock levels */
     private final InventoryManager inventoryManager;
+    /** Handles replenishment request operations and status updates */
     private final IReplenishmentService replenishmentService;
+    /** Scanner for reading user input */
     private final Scanner scanner;
 
+    /**
+     * Constructs a ReplenishmentRequestHandler with specified managers.
+     * @param inventoryManager Manager for inventory operations
+     * @param replenishmentService Service for handling replenishment requests
+     */
     public ReplenishmentRequestHandler(InventoryManager inventoryManager,
             IReplenishmentService replenishmentService) {
         this.inventoryManager = inventoryManager;
@@ -24,6 +37,10 @@ public class ReplenishmentRequestHandler {
         new InputValidator();
     }
 
+    /**
+     * Displays all pending replenishment requests in the system.
+     * If no pending requests exist, displays an appropriate message.
+     */
     public void viewPendingRequests() {
         List<ReplenishmentRequest> pendingRequests = replenishmentService.getPendingRequests();
         if (pendingRequests.isEmpty()) {

@@ -13,18 +13,45 @@ import java.util.List;
 import java.util.stream.Collectors;
 import pharmacy_management.prescriptions.Prescription;
 
+/**
+ * Manages the collection of appointments in the hospital management system.
+ * Provides functionality for:
+ * - Storing and retrieving appointments
+ * - Filtering appointments by various criteria
+ * - Persisting appointment data to CSV
+ * - Loading appointments from CSV storage
+ * Acts as the primary data manager for all appointment-related operations.
+ */
 public class AppointmentList {
+    /** In-memory list of all appointments */
     private List<Appointment> appointments;
+    
+    /** Date format for appointment timestamps */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    
+    /** File path for appointment data persistence */
     private static final String APPOINTMENT_FILE_PATH = "SC2002HMS/data/Appointments.csv";
+    
+    /** User controller for accessing patient and doctor information */
     private final UserController userController;
 
+    /**
+     * Constructs a new AppointmentList.
+     * Initializes the appointment collection and loads existing appointments from CSV.
+     * Sets up user controller for accessing user data.
+     */
     public AppointmentList() {
         this.appointments = new ArrayList<>();
         this.userController = UserController.getInstance();
         loadAppointmentsFromCSV(APPOINTMENT_FILE_PATH);
     }
 
+    /**
+     * Adds a new appointment to the collection.
+     * Validates appointment data before adding and persists to CSV.
+     * 
+     * @param appointment The appointment to add
+     */
     public void addAppointment(Appointment appointment) {
         if (appointment == null || appointment.getPatient() == null || appointment.getDoctor() == null) {
             System.err.println("Cannot add invalid appointment");
@@ -34,6 +61,12 @@ public class AppointmentList {
         saveAppointmentsToCSV(APPOINTMENT_FILE_PATH);
     }
 
+    /**
+     * Retrieves an appointment by its unique identifier.
+     * 
+     * @param appointmentId ID of the appointment to retrieve
+     * @return The matching appointment or null if not found
+     */
     public Appointment getAppointmentById(String appointmentId) {
         return appointments.stream()
                 .filter(app -> app.getAppointmentId().equals(appointmentId))
@@ -41,16 +74,35 @@ public class AppointmentList {
                 .orElse(null);
     }
 
+    /**
+     * Retrieves all appointments in the system.
+     * Returns a new list to prevent external modifications.
+     * 
+     * @return List of all appointments
+     */
     public List<Appointment> getAllAppointments() {
         return new ArrayList<>(appointments);
     }
 
+    /**
+     * Filters appointments by their current status.
+     * 
+     * @param status Status to filter by (e.g., "Confirmed", "Pending")
+     * @return List of appointments matching the specified status
+     */
     public List<Appointment> getAppointmentsByStatus(String status) {
         return appointments.stream()
                 .filter(app -> app.getStatus().equalsIgnoreCase(status))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Loads appointments from CSV storage.
+     * Parses CSV data and creates appointment objects.
+     * Handles data validation and type conversion.
+     * 
+     * @param filePath Path to the CSV file
+     */
     public void loadAppointmentsFromCSV(String filePath) {
         List<String[]> records = CSVReaderUtil.readCSV(filePath);
         appointments.clear();
@@ -70,6 +122,12 @@ public class AppointmentList {
         }
     }
 
+    /**
+     * Creates an appointment object from CSV record data.
+     * Validates record format and data integrity.
+     * 
+     * @param record CSV record data
+     */
     private void createAppointmentFromRecord(String[] record) {
         if (record.length < 5) {
             System.err.println("Invalid appointment record format");

@@ -13,11 +13,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for managing patient medical records in the HMS.
+ * Handles:
+ * - Medical record CRUD operations
+ * - Data persistence
+ * - Record validation
+ * - CSV file management
+ * - Record access control
+ * Provides centralized management of patient medical information.
+ */
 public class MedicalRecordController {
+    /** Map of patient IDs to their medical records */
     private final Map<String, MedicalRecord> recordsMap;
+    
+    /** File path for medical record persistence */
     private static final String MEDICAL_RECORD_PATH = "SC2002HMS/data/Medical_Record.csv";
+    
+    /** Controller for user management operations */
     private final UserController userController;
 
+    /**
+     * Constructs a new MedicalRecordController.
+     * Initializes record storage and loads existing records.
+     * Sets up user management integration.
+     */
     public MedicalRecordController() {
         this.recordsMap = new HashMap<>();
         this.userController = UserController.getInstance();
@@ -25,6 +45,11 @@ public class MedicalRecordController {
         loadRecordsFromCSV();
     }
 
+    /**
+     * Initializes the medical records file.
+     * Creates file and directory if they don't exist.
+     * Ensures data persistence structure is ready.
+     */
     private void initializeFile() {
         File file = new File(MEDICAL_RECORD_PATH);
         if (!file.exists()) {
@@ -36,6 +61,11 @@ public class MedicalRecordController {
         }
     }
 
+    /**
+     * Loads medical records from CSV storage.
+     * Parses record data and creates record objects.
+     * Validates record information during loading.
+     */
     private void loadRecordsFromCSV() {
         List<String[]> rows = CSVReaderUtil.readCSV(MEDICAL_RECORD_PATH);
         boolean isFirstRow = true;
@@ -55,6 +85,12 @@ public class MedicalRecordController {
         }
     }
 
+    /**
+     * Creates a medical record from CSV row data.
+     * Validates and processes record information.
+     * 
+     * @param row Array of record data from CSV
+     */
     private void createRecordFromRow(String[] row) {
         String patientId = row[0].trim();
         String name = row[1].trim();
@@ -71,10 +107,24 @@ public class MedicalRecordController {
         recordsMap.put(patientId, record);
     }
 
+    /**
+     * Retrieves a medical record by patient ID.
+     * 
+     * @param patientId ID of the patient
+     * @return Medical record or null if not found
+     */
     public MedicalRecord getRecordByPatientId(String patientId) {
         return recordsMap.get(patientId);
     }
 
+    /**
+     * Updates an existing medical record.
+     * Validates and processes record updates.
+     * 
+     * @param patientId ID of the patient
+     * @param diagnosis New diagnosis information
+     * @param prescription New prescription information
+     */
     public void updateRecord(String patientId, String diagnosis, String prescription) {
         MedicalRecord record = recordsMap.get(patientId);
         if (record != null) {

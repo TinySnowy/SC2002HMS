@@ -5,18 +5,49 @@ import user_management.UserController;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+/**
+ * Manages the login interface and authentication process for the HMS.
+ * Handles:
+ * - User authentication
+ * - Password validation
+ * - First-time login procedures
+ * - Login attempt tracking
+ * - Security enforcement
+ * Provides secure access control to the system.
+ */
 public class LoginPage {
+    /** Controller for managing user data and operations */
     private final UserController userController;
+    
+    /** Manager for login credentials and authentication */
     private final LoginCredentials loginCredentials;
+    
+    /** Scanner for user input */
     private final Scanner scanner;
+    
+    /** Maximum allowed login attempts per session */
     private static final int MAX_LOGIN_ATTEMPTS = 3;
+    
+    /** Minimum required password length */
     private static final int MIN_PASSWORD_LENGTH = 6;
+    
+    /** Maximum allowed password length */
     private static final int MAX_PASSWORD_LENGTH = 20;
+    
+    /** Default password for first-time users */
     private static final String DEFAULT_PASSWORD = "password";
     
+    /** Regular expression for password validation */
     private static final Pattern PASSWORD_PATTERN = 
         Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{6,20}$");
 
+    /**
+     * Constructs a new LoginPage with user management system.
+     * Initializes login components and validation tools.
+     * 
+     * @param userController Controller for user management
+     * @throws IllegalArgumentException if userController is null
+     */
     public LoginPage(UserController userController) {
         if (userController == null) {
             throw new IllegalArgumentException("UserController cannot be null");
@@ -26,6 +57,16 @@ public class LoginPage {
         this.scanner = new Scanner(System.in);
     }
 
+    /**
+     * Initiates the login process.
+     * Manages:
+     * - User identification
+     * - Password verification
+     * - Login attempts
+     * - First-time login procedures
+     * 
+     * @return Authenticated User object or null if login fails
+     */
     public User start() {
         int globalAttempts = 0;
         final int MAX_GLOBAL_ATTEMPTS = 5;
@@ -72,6 +113,17 @@ public class LoginPage {
         return null;
     }
 
+    /**
+     * Handles the login process for a specific user.
+     * Manages:
+     * - Password verification
+     * - First-time login detection
+     * - Login attempt counting
+     * 
+     * @param user User attempting to login
+     * @param id User's ID
+     * @return Authenticated User object or null if login fails
+     */
     private User handleLogin(User user, String id) {
         int attempts = 0;
         while (attempts < MAX_LOGIN_ATTEMPTS) {
@@ -111,6 +163,17 @@ public class LoginPage {
         return null;
     }
 
+    /**
+     * Manages first-time login procedure.
+     * Enforces:
+     * - Password change requirement
+     * - Password complexity rules
+     * - Confirmation matching
+     * 
+     * @param user User completing first-time login
+     * @param id User's ID
+     * @return true if password change successful, false otherwise
+     */
     private boolean handleFirstTimeLogin(User user, String id) {
         System.out.println("\nFirst time login detected. You must change your password.");
         System.out.println("Password requirements:");
@@ -165,6 +228,16 @@ public class LoginPage {
         return false;
     }
 
+    /**
+     * Validates password against security requirements.
+     * Checks:
+     * - Length requirements
+     * - Character complexity
+     * - Format requirements
+     * 
+     * @param password Password to validate
+     * @return true if password meets requirements, false otherwise
+     */
     private boolean isValidPassword(String password) {
         if (password == null || password.trim().isEmpty()) {
             return false;
@@ -185,12 +258,20 @@ public class LoginPage {
         return true;
     }
 
+    /**
+     * Displays welcome banner for login interface.
+     * Shows system name and login prompt.
+     */
     private void displayWelcomeBanner() {
         System.out.println("\n=========================================");
         System.out.println("    Hospital Management System Login");
         System.out.println("=========================================");
     }
 
+    /**
+     * Closes system resources.
+     * Ensures proper cleanup of scanner.
+     */
     public void close() {
         if (scanner != null) {
             scanner.close();

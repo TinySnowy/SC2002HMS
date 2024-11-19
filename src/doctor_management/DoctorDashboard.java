@@ -15,14 +15,42 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * Primary dashboard interface for doctors in the hospital management system.
+ * Provides comprehensive functionality for:
+ * - Managing patient medical records
+ * - Handling appointments
+ * - Setting availability schedules
+ * - Recording consultation outcomes
+ * Serves as the main interface for doctor interactions with the system.
+ */
 public class DoctorDashboard implements AutoCloseable {
+    /** Currently logged-in doctor */
     private final Doctor doctor;
+    
+    /** Facade for managing doctor-related operations */
     private final DoctorManagementFacade doctorManager;
+    
+    /** Scanner for user input */
     private final Scanner scanner;
+    
+    /** Formatter for dates (YYYY-MM-DD) */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    
+    /** Formatter for times (HH:mm) */
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    
+    /** Formatter for date-times (YYYY-MM-DD HH:mm) */
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    /**
+     * Constructs a new DoctorDashboard with necessary dependencies.
+     * Initializes the dashboard with doctor-specific services.
+     * 
+     * @param doctor Currently logged-in doctor
+     * @param appointmentList List of system appointments
+     * @param outcomeService Service for managing appointment outcomes
+     */
     public DoctorDashboard(Doctor doctor, AppointmentList appointmentList,
             IAppointmentOutcomeService outcomeService) {
         this.doctor = doctor;
@@ -33,6 +61,11 @@ public class DoctorDashboard implements AutoCloseable {
         this.scanner = new Scanner(System.in);
     }
 
+    /**
+     * Displays and manages the main dashboard interface.
+     * Handles menu navigation and user input processing.
+     * Provides error handling and input validation.
+     */
     public void showDashboard() {
         boolean running = true;
         while (running) {
@@ -47,6 +80,10 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Displays the main menu options.
+     * Shows doctor-specific functions and navigation choices.
+     */
     private void displayMenu() {
         System.out.println("\nDoctor Dashboard - Dr. " + doctor.getName());
         System.out.println("----------------------------------------");
@@ -60,6 +97,13 @@ public class DoctorDashboard implements AutoCloseable {
         System.out.println("----------------------------------------");
     }
 
+    /**
+     * Processes user menu selections.
+     * Routes to appropriate functionality based on choice.
+     * 
+     * @param choice User's menu selection
+     * @return false to exit, true to continue
+     */
     private boolean handleMenuChoice(int choice) {
         switch (choice) {
             case 1:
@@ -89,6 +133,15 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Validates and processes numeric user input.
+     * Ensures input is within valid range.
+     * 
+     * @param prompt Message to display to user
+     * @param min Minimum valid value
+     * @param max Maximum valid value
+     * @return Validated user input
+     */
     private int getValidatedInput(String prompt, int min, int max) {
         while (true) {
             try {
@@ -106,6 +159,11 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Manages doctor availability settings.
+     * Handles schedule entry creation and validation.
+     * Persists availability updates.
+     */
     private void setAvailability() {
         System.out.println("\nSet Availability");
         System.out.println("----------------------------------------");
@@ -133,6 +191,12 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Validates and creates a schedule entry.
+     * Ensures proper date and time formats.
+     * 
+     * @return Valid schedule entry or null if cancelled
+     */
     private ScheduleEntry getValidatedScheduleEntry() {
         while (true) {
             try {
@@ -168,6 +232,13 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Validates date input for scheduling.
+     * Ensures date is not in the past.
+     * 
+     * @param date Date string to validate
+     * @return Validated date or null if invalid
+     */
     private LocalDate validateAndParseDate(String date) {
         try {
             LocalDate scheduleDate = LocalDate.parse(date, DATE_FORMATTER);
@@ -182,6 +253,13 @@ public class DoctorDashboard implements AutoCloseable {
         }
     }
 
+    /**
+     * Validates time input for scheduling.
+     * Ensures time is in a half hour interval.
+     * 
+     * @param time Time string to validate
+     * @return true if valid, false if invalid
+     */
     private boolean validateTime(String time) {
         try {
             if (!time.matches("^([0-1][0-9]|2[0-3]):[0-5][0-9]$")) {
