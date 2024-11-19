@@ -85,10 +85,5 @@ The project application was designed using **Object-Oriented Programming (OOP)**
 - **Scalable Architecture**: The modular design supports future feature additions with minimal disruption.
 - **Enhanced Usability**: A robust, user-friendly interface ensures smooth operations for end-users.
 
-##UML Class Diagram
-
-![UML Class Diagram](/Users/grishaa/Desktop/UML.jpg)
-
-
 
 
