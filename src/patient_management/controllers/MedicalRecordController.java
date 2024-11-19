@@ -65,14 +65,8 @@ public class MedicalRecordController {
             return;
         }
 
-        // Get patient from UserController
-        User user = userController.getUserById(patientId);
-        if (!(user instanceof Patient)) {
-            System.err.println("Invalid patient ID in medical record: " + patientId);
-            return;
-        }
-        Patient patient = (Patient) user;
-
+        // Create the record even if the patient doesn't exist yet
+        // This handles cases where medical records are loaded before patients
         MedicalRecord record = new MedicalRecord(patientId, name, diagnosis, prescription);
         recordsMap.put(patientId, record);
     }

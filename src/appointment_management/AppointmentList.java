@@ -23,7 +23,6 @@ public class AppointmentList {
         this.appointments = new ArrayList<>();
         this.userController = UserController.getInstance();
         loadAppointmentsFromCSV(APPOINTMENT_FILE_PATH);
-        System.out.println("Loaded " + appointments.size() + " appointments"); // Debug
     }
 
     public void addAppointment(Appointment appointment) {
@@ -31,7 +30,6 @@ public class AppointmentList {
             System.err.println("Cannot add invalid appointment");
             return;
         }
-        System.out.println("Adding appointment: " + appointment.getAppointmentId()); // Debug
         appointments.add(appointment);
         saveAppointmentsToCSV(APPOINTMENT_FILE_PATH);
     }
@@ -56,7 +54,6 @@ public class AppointmentList {
     public void loadAppointmentsFromCSV(String filePath) {
         List<String[]> records = CSVReaderUtil.readCSV(filePath);
         appointments.clear();
-        System.out.println("Loading appointments from: " + filePath); // Debug
 
         boolean isFirstRow = true;
         for (String[] record : records) {
@@ -111,15 +108,13 @@ public class AppointmentList {
             }
             
             appointments.add(appointment);
-            System.out.println("Loaded appointment: " + appointmentId + " for patient: " + 
-                             patientId + " with doctor: " + doctorId); // Debug
+
         } catch (Exception e) {
             System.err.println("Error creating appointment from record: " + e.getMessage());
         }
     }
 
     public void saveAppointmentsToCSV(String filePath) {
-        System.out.println("Saving " + appointments.size() + " appointments to: " + filePath); // Debug
         
         CSVWriterUtil.writeCSV(filePath, writer -> {
             try {
@@ -146,7 +141,6 @@ public class AppointmentList {
                             notes);
                             
                     writer.write(line + "\n");
-                    System.out.println("Saved appointment: " + appointment.getAppointmentId()); // Debug
                 }
             } catch (Exception e) {
                 System.err.println("Error saving appointments: " + e.getMessage());
@@ -164,14 +158,12 @@ public class AppointmentList {
     }
 
     public List<Appointment> getAppointmentsForPatient(String patientId) {
-        System.out.println("Getting appointments for patient: " + patientId); // Debug
         List<Appointment> patientAppointments = appointments.stream()
             .filter(app -> app.getPatient() != null && app.getPatient().getId().equals(patientId))
             .peek(app -> System.out.println("Found appointment: " + app.getAppointmentId() + 
                         " Status: " + app.getStatus())) // Debug
             .collect(Collectors.toList());
             
-        System.out.println("Found " + patientAppointments.size() + " appointments"); // Debug
         return patientAppointments;
     }
 

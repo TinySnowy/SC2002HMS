@@ -58,12 +58,10 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
 
                 outcomes.put(appointmentId, outcome);
                 
-                System.out.println("Loaded outcome for appointment: " + appointmentId); // Debug
             } catch (Exception e) {
                 System.err.println("Error loading outcome record: " + e.getMessage());
             }
         }
-        System.out.println("Total outcomes loaded: " + outcomes.size()); // Debug
     }
 
     private void loadPrescriptions(AppointmentOutcome outcome, String prescriptionData) {
@@ -132,7 +130,6 @@ public class AppointmentOutcomeService implements IAppointmentOutcomeService {
                 .anyMatch(p -> "Pending".equals(p.getStatus())))
             .collect(java.util.stream.Collectors.toList());
             
-        System.out.println("Found " + pendingOutcomes.size() + " pending outcomes"); // Debug
         return pendingOutcomes;
     }
 

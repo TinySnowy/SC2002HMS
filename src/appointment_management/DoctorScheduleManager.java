@@ -22,14 +22,12 @@ public class DoctorScheduleManager {
       this.doctorSchedules = new HashMap<>();
       this.appointmentList = new AppointmentList();
       loadSchedules();
-      System.out.println("DoctorScheduleManager initialized with " + doctorSchedules.size() + " schedules"); // Debug
   }
 
   private void loadSchedules() {
       List<String[]> records = CSVReaderUtil.readCSV(SCHEDULE_FILE);
       boolean isFirstRow = true;
       
-      System.out.println("Loading doctor schedules from: " + SCHEDULE_FILE); // Debug
       
       for (String[] record : records) {
           if (isFirstRow) {
@@ -51,8 +49,7 @@ public class DoctorScheduleManager {
                       doctorId, k -> new ArrayList<>());
                   doctorEntries.add(entry);
                   
-                  System.out.println("Loaded schedule for doctor " + doctorId + 
-                                   " on " + dateStr + " (" + startTime + "-" + endTime + ")"); // Debug
+
               } catch (Exception e) {
                   System.err.println("Error loading schedule entry: " + e.getMessage());
               }
@@ -64,15 +61,12 @@ public class DoctorScheduleManager {
       List<ScheduleEntry> availableSlots = new ArrayList<>();
       List<ScheduleEntry> doctorSlots = doctorSchedules.get(doctorId);
       
-      System.out.println("Finding available slots for doctor: " + doctorId); // Debug
       
       if (doctorSlots == null || doctorSlots.isEmpty()) {
-          System.out.println("No schedule found for doctor: " + doctorId); // Debug
           return availableSlots;
       }
 
       List<Appointment> doctorAppointments = appointmentList.getAppointmentsForDoctor(doctorId);
-      System.out.println("Found " + doctorAppointments.size() + " existing appointments"); // Debug
       
       LocalDateTime now = LocalDateTime.now();
 

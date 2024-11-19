@@ -202,7 +202,6 @@ public class UserController {
     }
 
     public void persistPatientData() {
-        System.out.println("Saving patient data...");
         CSVWriterUtil.writeCSV(PATIENT_FILE, writer -> {
             writer.write("ID,Name,Password,DateOfBirth,Gender,BloodGroup,ContactInfo,Email,FirstLogin\n");
             for (User user : userDatabase.values()) {
@@ -218,7 +217,6 @@ public class UserController {
                             patient.getEmail(),
                             patient.isFirstLogin());
                     writer.write(record);
-                    System.out.println("Saved patient: " + patient.getId());
                 }
             }
         });
@@ -254,17 +252,14 @@ public class UserController {
     }
 
     public void persistStaffData() {
-        System.out.println("Saving staff data...");
         try {
             CSVWriterUtil.writeCSV(STAFF_FILE, writer -> {
                 writer.write("ID,Name,Role,Specialty/License,Gender,Age\n");
-
                 for (User user : userDatabase.values()) {
                     if (!(user instanceof Patient)) {
                         String record = createStaffRecord(user);
                         if (record != null) {
                             writer.write(record);
-                            System.out.println("Saved staff member: " + user.getId());
                         }
                     }
                 }
@@ -275,8 +270,13 @@ public class UserController {
     }
 
     public void persistAllData() {
-        persistPatientData();
-        persistStaffData();
+        try {
+            persistPatientData();
+            persistStaffData();
+            System.out.println("Data updated successfully");
+        } catch (Exception e) {
+            System.err.println("Error updating data: " + e.getMessage());
+        }
     }
 
     public User createNewStaff(String id, String name, String role, String password,
