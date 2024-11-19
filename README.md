@@ -79,5 +79,5 @@ The project application was designed using **Object-Oriented Programming (OOP)**
 
 
 ## UML Class Diagram
-<img src="/Users/grishaa/Desktop/UML.jpg" alt="UML Class Diagram" width="500">
+
 
