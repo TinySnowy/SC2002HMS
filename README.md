@@ -19,3 +19,15 @@ This project emphasizes collaborative teamwork to create a functional, user-frie
 | Aryan Jain      | aryan017@e.ntu.edu.sg      | aryanjain285      |
 | Vihaan Motwani  | vihaan002@e.ntu.edu.sg     | VihaanMotwani     |
 | Alok Vernekar   | alokaash001@e.ntu.edu.sg   | TinySnowy         |
+
+
+## Prerequisites
+
+Ensure you have the following installed on your system:
+
+- **JDK 22 or higher**: [Download here](https://www.oracle.com/java/technologies/javase/jdk22-archive-downloads.html) 
+
+Make sure your environment is set up correctly by verifying the installation of Java. You can check this by running the following command:
+
+```bash
+java --version
