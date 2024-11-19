@@ -79,5 +79,6 @@ The project application was designed using **Object-Oriented Programming (OOP)**
 
 
 ## UML Class Diagram
+![UML](https://github.com/user-attachments/assets/d33ca529-2c44-48ea-b996-ed8aa0500664)
 
 
