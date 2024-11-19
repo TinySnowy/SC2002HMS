@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class UserController {
     private static UserController instance;
@@ -61,7 +62,7 @@ public class UserController {
                 patient.setFirstLogin(isFirstLogin);
                 addUser(patient);
                 
-                System.out.println("Loaded patient: " + id); // Debug log
+                System.out.println("Loaded patient: " + id);
             } catch (Exception e) {
                 System.err.println("Error loading patient data: " + e.getMessage());
             }
@@ -98,7 +99,7 @@ public class UserController {
                                           passwordHash, true);
                 if (user != null) {
                     addUser(user);
-                    System.out.println("Loaded staff member: " + id); // Debug log
+                    System.out.println("Loaded staff member: " + id);
                 }
             } catch (Exception e) {
                 System.err.println("Error loading staff data: " + e.getMessage());
@@ -139,6 +140,7 @@ public class UserController {
             throw new IllegalArgumentException("User not found: " + userId);
         }
         userDatabase.remove(userId);
+        persistAllData(); // Save changes immediately
     }
 
     public void updateUser(User user) {
@@ -163,17 +165,44 @@ public class UserController {
         return new ArrayList<>(userDatabase.values());
     }
 
+    public List<Doctor> getAllDoctors() {
+        return userDatabase.values().stream()
+                .filter(user -> user instanceof Doctor)
+                .map(user -> (Doctor) user)
+                .collect(Collectors.toList());
+    }
+
     public List<User> getUsersByRole(String role) {
         if (role == null || role.trim().isEmpty()) {
             return new ArrayList<>();
         }
         return userDatabase.values().stream()
                 .filter(user -> user.getUserType().equalsIgnoreCase(role))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
+    }
+
+    public List<User> searchUsersByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        String searchTerm = name.toLowerCase().trim();
+        return userDatabase.values().stream()
+                .filter(user -> user.getName().toLowerCase().contains(searchTerm))
+                .collect(Collectors.toList());
+    }
+
+    public List<Doctor> searchDoctorsBySpecialty(String specialty) {
+        if (specialty == null || specialty.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        String searchTerm = specialty.toLowerCase().trim();
+        return getAllDoctors().stream()
+                .filter(doctor -> doctor.getSpecialty().toLowerCase().contains(searchTerm))
+                .collect(Collectors.toList());
     }
 
     public void persistPatientData() {
-        System.out.println("Saving patient data..."); // Debug log
+        System.out.println("Saving patient data...");
         CSVWriterUtil.writeCSV(PATIENT_FILE, writer -> {
             writer.write("ID,Name,Password,DateOfBirth,Gender,BloodGroup,ContactInfo,Email,FirstLogin\n");
             for (User user : userDatabase.values()) {
@@ -189,7 +218,7 @@ public class UserController {
                             patient.getEmail(),
                             patient.isFirstLogin());
                     writer.write(record);
-                    System.out.println("Saved patient: " + patient.getId()); // Debug log
+                    System.out.println("Saved patient: " + patient.getId());
                 }
             }
         });
@@ -225,7 +254,7 @@ public class UserController {
     }
 
     public void persistStaffData() {
-        System.out.println("Saving staff data..."); // Debug log
+        System.out.println("Saving staff data...");
         try {
             CSVWriterUtil.writeCSV(STAFF_FILE, writer -> {
                 writer.write("ID,Name,Role,Specialty/License,Gender,Age\n");
@@ -235,7 +264,7 @@ public class UserController {
                         String record = createStaffRecord(user);
                         if (record != null) {
                             writer.write(record);
-                            System.out.println("Saved staff member: " + user.getId()); // Debug log
+                            System.out.println("Saved staff member: " + user.getId());
                         }
                     }
                 }

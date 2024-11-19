@@ -9,7 +9,8 @@ public class MenuPrinter {
         System.out.println("1. Staff Management");
         System.out.println("2. Inventory Management");
         System.out.println("3. Appointment Management");
-        System.out.println("4. Exit");
+        System.out.println("4. View Feedback Reports");
+        System.out.println("5. Logout");
         System.out.println(SEPARATOR);
     }
 
@@ -50,6 +51,17 @@ public class MenuPrinter {
         System.out.println("2. Approve Request");
         System.out.println("3. Reject Request");
         System.out.println("4. Back");
+        System.out.println(SEPARATOR);
+    }
+
+    public void printFeedbackMenu() {
+        System.out.println("\nFeedback Reports");
+        System.out.println(SEPARATOR);
+        System.out.println("1. View Overall Feedback Summary");
+        System.out.println("2. View Doctor-wise Feedback");
+        System.out.println("3. View Recent Feedback");
+        System.out.println("4. Generate Feedback Report");
+        System.out.println("5. Back to Main Menu");
         System.out.println(SEPARATOR);
     }
 }

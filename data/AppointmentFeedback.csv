@@ -1,0 +1,2 @@
+FeedbackId,AppointmentId,PatientId,DoctorId,Rating,Comment,SubmissionTime,IsAnonymous
+F1732020244812,A1732017530964,P1001,D001,3,The doctor was very kind; but the advice wasnt very helpful,2024-11-19T20:44:04.815364,false

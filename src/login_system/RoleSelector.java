@@ -2,12 +2,14 @@ package login_system;
 
 import doctor_management.DoctorDashboard;
 import admin_management.AdminDashboard;
+import admin_management.menu.AdminMainMenu;
 import patient_management.PatientDashboard;
 import pharmacy_management.*;
 import pharmacy_management.appointments.AppointmentOutcomeService;
 import pharmacy_management.appointments.IAppointmentOutcomeService;
 import pharmacy_management.inventory.IReplenishmentService;
 import pharmacy_management.inventory.InventoryManager;
+import appointment_management.feedback.FeedbackService;
 import user_management.*;
 import appointment_management.AppointmentList;
 
@@ -15,6 +17,7 @@ public class RoleSelector {
     private final UserController userController;
     private final AppointmentList appointmentList;
     private final IReplenishmentService replenishmentService;
+    private final FeedbackService feedbackService;
 
     public RoleSelector(UserController userController,
             AppointmentList appointmentList,
@@ -22,6 +25,7 @@ public class RoleSelector {
         this.userController = userController;
         this.appointmentList = appointmentList;
         this.replenishmentService = replenishmentService;
+        this.feedbackService = new FeedbackService();
     }
 
     public void navigateToRoleDashboard(User user) {
@@ -33,12 +37,12 @@ public class RoleSelector {
             switch (user.getRole()) {
                 case "Administrator":
                     InventoryManager adminInventoryManager = new InventoryManager(replenishmentService, user.getId());
-                    AdminDashboard adminDashboard = new AdminDashboard(
+                    AdminMainMenu adminMenu = new AdminMainMenu(
                             userController,
                             adminInventoryManager,
                             replenishmentService,
                             appointmentList);
-                    adminDashboard.showDashboard();
+                    adminMenu.display();
                     break;
 
                 case "Doctor":
@@ -54,14 +58,13 @@ public class RoleSelector {
                 case "Pharmacist":
                     System.out.println("Navigating to Pharmacist Dashboard...");
                     Pharmacist pharmacist = (Pharmacist) user;
-                    // Create InventoryManager with pharmacist ID
                     InventoryManager pharmacistInventoryManager = new InventoryManager(replenishmentService,
                             pharmacist.getId());
                     PharmacistDashboard pharmacistDashboard = new PharmacistDashboard(
                             pharmacist,
                             pharmacistInventoryManager,
                             replenishmentService,
-                            userController); // Pass UserController here
+                            userController);
                     pharmacistDashboard.showDashboard();
                     break;
 

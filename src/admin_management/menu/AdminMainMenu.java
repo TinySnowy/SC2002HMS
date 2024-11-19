@@ -4,18 +4,29 @@ import user_management.UserController;
 import pharmacy_management.inventory.IReplenishmentService;
 import pharmacy_management.inventory.InventoryManager;
 import appointment_management.AppointmentList;
+import appointment_management.feedback.FeedbackService;
+import admin_management.handlers.AdminFeedbackViewer;
+import admin_management.utils.MenuPrinter;
 
 public class AdminMainMenu extends MenuBase {
     private final StaffManagementMenu staffMenu;
     private final InventoryManagementMenu inventoryMenu;
     private final AppointmentManagementMenu appointmentMenu;
+    private final FeedbackManagementMenu feedbackMenu;
+    private final MenuPrinter menuPrinter;
 
     public AdminMainMenu(UserController userController, InventoryManager inventoryManager,
             IReplenishmentService replenishmentService, AppointmentList appointmentList) {
         super();
+        this.menuPrinter = new MenuPrinter();
         this.staffMenu = new StaffManagementMenu(userController);
         this.inventoryMenu = new InventoryManagementMenu(inventoryManager, replenishmentService);
         this.appointmentMenu = new AppointmentManagementMenu(appointmentList);
+        this.feedbackMenu = new FeedbackManagementMenu(
+            new FeedbackService(), 
+            appointmentList, 
+            userController
+        );
     }
 
     @Override
@@ -23,7 +34,7 @@ public class AdminMainMenu extends MenuBase {
         boolean running = true;
         while (running) {
             menuPrinter.printMainMenu();
-            int choice = getValidChoice(1, 4);
+            int choice = getValidChoice(1, 5);
             running = handleChoice(choice);
         }
     }
@@ -41,6 +52,9 @@ public class AdminMainMenu extends MenuBase {
                 appointmentMenu.display();
                 return true;
             case 4:
+                feedbackMenu.display();
+                return true;
+            case 5:
                 System.out.println("Logging out from Admin Dashboard...");
                 return false;
             default:

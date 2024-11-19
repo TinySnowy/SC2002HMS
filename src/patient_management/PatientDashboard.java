@@ -2,6 +2,7 @@ package patient_management;
 
 import appointment_management.AppointmentList;
 import appointment_management.DoctorScheduleManager;
+import appointment_management.feedback.FeedbackService;
 import pharmacy_management.appointments.AppointmentOutcomeService;
 import user_management.*;
 import admin_management.handlers.staff.StaffDisplayHandler;
@@ -16,6 +17,7 @@ public class PatientDashboard {
     private final IAppointmentViewer appointmentViewer;
     private final IAppointmentHandler appointmentHandler;
     private final IPersonalInfoManager personalInfoManager;
+    private final FeedbackHandler feedbackHandler;
     private final PatientMenuPrinter menuPrinter;
     private final AppointmentList appointmentList;
     private final UserController userController;
@@ -29,11 +31,13 @@ public class PatientDashboard {
         // Initialize services
         AppointmentOutcomeService appointmentOutcomeService = new AppointmentOutcomeService(userController);
         DoctorScheduleManager scheduleManager = new DoctorScheduleManager();
+        FeedbackService feedbackService = new FeedbackService();
         
         // Initialize handlers
         this.appointmentViewer = new AppointmentViewer(patient, appointmentList, appointmentOutcomeService);
         this.appointmentHandler = new AppointmentHandler(patient, appointmentList, userController, scheduleManager);
         this.personalInfoManager = new PersonalInfoHandler(patient, userController);
+        this.feedbackHandler = new FeedbackHandler(patient, appointmentList, feedbackService);
         this.menuPrinter = new PatientMenuPrinter();
     }
 
@@ -42,13 +46,14 @@ public class PatientDashboard {
         while (running) {
             try {
                 menuPrinter.displayMenu(patient);
-                int choice = menuPrinter.getValidatedInput("Enter your choice: ", 1, 7);
+                int choice = menuPrinter.getValidatedInput("Enter your choice: ", 1, 9);
                 running = handleMenuChoice(choice);
             } catch (Exception e) {
                 menuPrinter.displayError(e.getMessage());
             }
         }
     }
+
     private boolean handleMenuChoice(int choice) {
         switch (choice) {
             case 1:
@@ -70,6 +75,12 @@ public class PatientDashboard {
                 personalInfoManager.updatePersonalInfo();
                 return true;
             case 7:
+                feedbackHandler.handleFeedback();
+                return true;
+            case 8:
+                feedbackHandler.viewMyFeedback();
+                return true;
+            case 9:
                 System.out.println("Logging out of Patient Dashboard...");
                 return false;
             default:
@@ -88,6 +99,7 @@ public class PatientDashboard {
         PatientDetailViewer detailViewer = new PatientDetailViewer();
         detailViewer.displayFullPatientRecord(record);
     }
+
     private void manageExistingAppointments() {
         var appointments = appointmentList.getAppointmentsForPatient(patient.getId());
         

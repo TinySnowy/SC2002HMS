@@ -14,12 +14,14 @@ public class PatientMenuPrinter {
         System.out.println("\nPatient Dashboard - " + patient.getName());
         System.out.println("----------------------------------------");
         System.out.println("1. View Medical Records");
-        System.out.println("2. View Appointments");
+        System.out.println("2. View All Appointments");
         System.out.println("3. Schedule New Appointment");
         System.out.println("4. Manage Existing Appointments");
         System.out.println("5. View Appointment Outcomes");
         System.out.println("6. Update Personal Information");
-        System.out.println("7. Log Out");
+        System.out.println("7. Submit Appointment Feedback");  // New option
+        System.out.println("8. View My Feedback History");     // New option
+        System.out.println("9. Logout");
         System.out.println("----------------------------------------");
     }
 
@@ -27,34 +29,22 @@ public class PatientMenuPrinter {
         while (true) {
             try {
                 System.out.print(prompt);
-                int input = scanner.nextInt();
-                scanner.nextLine(); // Consume newline
+                int input = Integer.parseInt(scanner.nextLine().trim());
                 if (input >= min && input <= max) {
                     return input;
                 }
                 System.out.printf("Please enter a number between %d and %d%n", min, max);
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine(); // Clear invalid input
             }
         }
     }
 
     public void displayError(String message) {
-        System.err.println("Error: " + message);
-    }
-
-    public void displaySuccess(String message) {
-        System.out.println("Success: " + message);
-    }
-
-    public void displayDivider() {
-        System.out.println("----------------------------------------");
+        System.out.println("\nError: " + message);
     }
 
     public void close() {
-        if (scanner != null) {
-            scanner.close();
-        }
+        scanner.close();
     }
 }
