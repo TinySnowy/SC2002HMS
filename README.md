@@ -19,4 +19,3 @@ This project emphasizes collaborative teamwork to create a functional, user-frie
 | Aryan Jain      | aryan017@e.ntu.edu.sg      | aryanjain285      |
 | Vihaan Motwani  | vihaan002@e.ntu.edu.sg     | VihaanMotwani     |
 | Alok Vernekar   | alokaash001@e.ntu.edu.sg   | TinySnowy         |
-|                 |                            |                   |
