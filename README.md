@@ -31,3 +31,7 @@ Make sure your environment is set up correctly by verifying the installation of 
 
 ```bash
 java --version
+```
+Clone repository using ```bash [github link](https://github.com/TinySnowy/SC2002HMS)```
+
+
