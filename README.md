@@ -34,4 +34,61 @@ java --version
 ```
 Clone repository using [github link](https://github.com/TinySnowy/SC2002HMS)
 
+## Project Design and Implementation
+
+The project application was designed using **Object-Oriented Programming (OOP)** principles, ensuring a robust, maintainable, and modular foundation. Key elements and steps in the design process include:
+
+### Key OOP Principles Implemented
+
+1. **Encapsulation**:  
+   - Protected critical data by restricting direct access and providing controlled access through methods.
+
+2. **Inheritance**:  
+   - Promoted code reuse by inheriting common functionalities across related classes.
+
+3. **Polymorphism**:  
+   - Enabled flexible and dynamic behaviors through method overriding and overloading.
+
+4. **Abstraction**:  
+   - Simplified complexity by hiding implementation details and exposing only essential features.
+
+### Key Design Steps
+
+1. **UML Class Diagram**:
+   - Designed using **SOLID design principles**, ensuring:
+     - Modularity for easy code management and debugging.
+     - Scalability to adapt to future system expansions.
+
+2. **Data Handling**:
+   - Implemented persistent data storage using **CSV files**.
+   - Enabled the program to read, write, and resume smoothly during successive operations.
+   - Added additional data columns dynamically as per requirements.
+
+3. **Error Handling and Usability**:
+   - Built comprehensive **error-checking mechanisms** to ensure system robustness.
+   - Designed a **user-friendly interface** to guide users and effectively handle erroneous inputs.
+
+### SOLID Principles vs. MVC Design
+
+1. **Preferred SOLID Principles over MVC**:
+   - Simplified **dependency management**.
+   - Better suited for **real-time data access** requirements, especially in systems like a Hospital Management System (HMS).
+   - Avoided tightly coupled dependencies and complex interactions commonly found in MVC architectures.
+
+2. **Real-Time Data Needs**:
+   - Prioritized **real-time synchronization** for patient records and appointment bookings.
+   - Ensured efficient and timely updates for critical operations such as patient care and scheduling.
+
+### Achievements
+
+- **Balanced Design**: By adhering to OOP and SOLID principles, the system achieved a balance between simplicity, functionality, and scalability.
+- **Scalable Architecture**: The modular design supports future feature additions with minimal disruption.
+- **Enhanced Usability**: A robust, user-friendly interface ensures smooth operations for end-users.
+
+##UML Class Diagram
+
+![UML Class Diagram](/Users/grishaa/Desktop/UML.jpg)
+
+
+
 
